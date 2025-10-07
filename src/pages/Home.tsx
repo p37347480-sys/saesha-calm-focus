@@ -118,22 +118,32 @@ export default function Home() {
               transition={{ delay: 0.6 }}
               className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
             >
-              <EnhancedButton
-                variant="hero"
-                size="lg"
-                onClick={handleGetStarted}
-                className="min-w-[200px]"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Get Started
-              </EnhancedButton>
-              <EnhancedButton
-                variant="outline"
-                size="lg"
-                onClick={() => navigate('/about')}
-                className="min-w-[200px]"
+                <EnhancedButton
+                  variant="hero"
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="min-w-[200px]"
+                >
+                  Get Started
+                </EnhancedButton>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Learn More
-              </EnhancedButton>
+                <EnhancedButton
+                  variant="outline"
+                  size="lg"
+                  onClick={() => navigate('/about')}
+                  className="min-w-[200px]"
+                >
+                  Learn More
+                </EnhancedButton>
+              </motion.div>
             </motion.div>
           </motion.div>
 
@@ -150,11 +160,19 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
-                className="group rounded-2xl border border-border/50 bg-card/80 p-6 shadow-sm backdrop-blur-sm transition-all hover:scale-105 hover:shadow-md"
+                whileHover={{
+                  scale: 1.05,
+                  transition: { duration: 0.2 },
+                }}
+                className="group rounded-2xl border border-border/50 bg-card/80 p-6 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-md"
               >
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-calm">
+                <motion.div
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                  className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-calm"
+                >
                   <feature.icon className="h-6 w-6 text-primary" />
-                </div>
+                </motion.div>
                 <h3 className="mb-2 font-semibold text-foreground">
                   {feature.title}
                 </h3>
