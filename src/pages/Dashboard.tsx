@@ -10,6 +10,8 @@ import {
   PlayCircle,
   BookOpen,
   Target,
+  Library,
+  Sparkles,
 } from 'lucide-react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { CalmWorld } from '@/components/3d/CalmWorld';
@@ -17,6 +19,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore, Subject } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { CurriculumBrowser } from '@/components/CurriculumBrowser';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { MicroTask } from '@/data/curriculum';
 
 const container = {
   hidden: { opacity: 0 },
@@ -37,6 +42,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { settings } = useAppStore();
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedTask, setSelectedTask] = useState<MicroTask | null>(null);
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -61,6 +67,12 @@ export default function Dashboard() {
     }
     const subject = selectedSubject || settings.subjects[0];
     navigate(`/session?subject=${subject}&length=${settings.sessionLength}`);
+  };
+
+  const handleTaskSelect = (task: MicroTask) => {
+    setSelectedTask(task);
+    console.log('Selected task:', task);
+    // TODO: Navigate to task session with task.id
   };
 
   if (!settings.isOnboarded) {
@@ -106,28 +118,41 @@ export default function Dashboard() {
         </motion.header>
 
         <main className="container mx-auto px-4 py-8">
-          {/* Greeting */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-8"
-          >
-            <h2 className="mb-2 text-3xl font-bold text-foreground md:text-4xl">
-              {greeting}! 👋
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Ready for a focused learning session?
-            </p>
-          </motion.div>
+          {/* Tabs for Dashboard vs Explore */}
+          <Tabs defaultValue="dashboard" className="w-full">
+            <TabsList className="mb-8 grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="dashboard" className="gap-2">
+                <Target className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="explore" className="gap-2">
+                <Library className="h-4 w-4" />
+                Explore
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Stats Grid */}
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate="show"
-            className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-          >
+            <TabsContent value="dashboard" className="space-y-8">
+              {/* Greeting */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <h2 className="mb-2 text-3xl font-bold text-foreground md:text-4xl">
+                  {greeting}! 👋
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Ready for a focused learning session?
+                </p>
+              </motion.div>
+
+              {/* Stats Grid */}
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+              >
             <motion.div variants={item}>
               <Card className="group overflow-hidden border-border/50 bg-gradient-card p-6 transition-all hover:scale-105 hover:shadow-md">
                 <div className="flex items-start justify-between">
@@ -221,16 +246,15 @@ export default function Dashboard() {
                   </motion.div>
                 </div>
               </Card>
-            </motion.div>
-          </motion.div>
+              </motion.div>
+              </motion.div>
 
-          {/* Subject Selection */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-8"
-          >
+              {/* Subject Selection */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
             <div className="mb-4 flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold text-foreground">
@@ -273,15 +297,14 @@ export default function Dashboard() {
                 Select a subject or start with any random topic
               </motion.p>
             )}
-          </motion.div>
+              </motion.div>
 
-          {/* Start Session CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="mb-8"
-          >
+              {/* Start Session CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
             <Card className="overflow-hidden border-primary/20 bg-gradient-calm p-8 shadow-lg">
               <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
                 <div className="text-center md:text-left">
@@ -320,15 +343,14 @@ export default function Dashboard() {
                 </motion.div>
               </div>
             </Card>
-          </motion.div>
+              </motion.div>
 
-          {/* Recent Activity */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="mb-8"
-          >
+              {/* Recent Activity */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+              >
             <div className="mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-semibold text-foreground">
@@ -380,14 +402,14 @@ export default function Dashboard() {
                 ))}
               </div>
             </Card>
-          </motion.div>
+              </motion.div>
 
-          {/* Quick Tips */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3 }}
-          >
+              {/* Quick Tips */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3 }}
+              >
             <Card className="border-accent/30 bg-gradient-card p-6">
               <div className="flex gap-4">
                 <motion.div
@@ -411,8 +433,59 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-            </Card>
-          </motion.div>
+              </Card>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="explore" className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="overflow-hidden border-primary/20 bg-gradient-calm p-6">
+                  <div className="mb-6 flex items-center gap-3">
+                    <motion.div
+                      animate={{
+                        rotate: [0, 360],
+                        scale: [1, 1.1, 1],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-hero shadow-md"
+                    >
+                      <Library className="h-6 w-6 text-primary-foreground" />
+                    </motion.div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        Explore Curriculum
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Browse all topics and micro-tasks for Class {settings.grade || 11}
+                      </p>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatDelay: 3,
+                      }}
+                    >
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </motion.div>
+                  </div>
+                  <CurriculumBrowser
+                    selectedGrade={settings.grade || 11}
+                    onTaskSelect={handleTaskSelect}
+                  />
+                </Card>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </div>
