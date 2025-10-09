@@ -14,13 +14,217 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          session_id: string | null
+          task_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string | null
+          task_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          grade: number
+          id: string
+          name: string
+          subjects: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grade: number
+          id: string
+          name: string
+          subjects?: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grade?: number
+          id?: string
+          name?: string
+          subjects?: string[]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          end_time: string | null
+          id: string
+          start_time: string | null
+          subject: string
+          tasks_completed: number | null
+          tasks_correct: number | null
+          total_hints_used: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          subject: string
+          tasks_completed?: number | null
+          tasks_correct?: number | null
+          total_hints_used?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          subject?: string
+          tasks_completed?: number | null
+          tasks_correct?: number | null
+          total_hints_used?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_results: {
+        Row: {
+          correct: boolean
+          created_at: string | null
+          difficulty: number
+          hints_used: number | null
+          id: string
+          response_time_ms: number
+          session_id: string
+          skipped: boolean | null
+          subject: string
+          task_id: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          correct: boolean
+          created_at?: string | null
+          difficulty: number
+          hints_used?: number | null
+          id?: string
+          response_time_ms: number
+          session_id: string
+          skipped?: boolean | null
+          subject: string
+          task_id: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          correct?: boolean
+          created_at?: string | null
+          difficulty?: number
+          hints_used?: number | null
+          id?: string
+          response_time_ms?: number
+          session_id?: string
+          skipped?: boolean | null
+          subject?: string
+          task_id?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_performance: {
+        Row: {
+          created_at: string | null
+          difficulty_level: number | null
+          ema_accuracy: number | null
+          ema_hints: number | null
+          ema_time: number | null
+          id: string
+          last_session_date: string | null
+          streak_days: number | null
+          subject: string
+          tokens: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          difficulty_level?: number | null
+          ema_accuracy?: number | null
+          ema_hints?: number | null
+          ema_time?: number | null
+          id?: string
+          last_session_date?: string | null
+          streak_days?: number | null
+          subject: string
+          tokens?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          difficulty_level?: number | null
+          ema_accuracy?: number | null
+          ema_hints?: number | null
+          ema_time?: number | null
+          id?: string
+          last_session_date?: string | null
+          streak_days?: number | null
+          subject?: string
+          tokens?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_session_stats: {
+        Args: { p_is_correct: boolean; p_session_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
