@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         profile,
         performance,
+        todaySessions,
         stats: {
           minutesToday: Math.round(minutesToday),
           tasksToday,

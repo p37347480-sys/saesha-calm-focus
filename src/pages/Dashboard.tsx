@@ -23,6 +23,8 @@ import { Card } from '@/components/ui/card';
 import { CurriculumBrowser } from '@/components/CurriculumBrowser';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { MicroTask } from '@/data/curriculum';
+import { useUserStats } from '@/hooks/useUserStats';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const container = {
   hidden: { opacity: 0 },
@@ -43,6 +45,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { settings } = useAppStore();
+  const stats = useUserStats();
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedTask, setSelectedTask] = useState<MicroTask | null>(null);
   const [greeting, setGreeting] = useState('');
@@ -53,14 +56,6 @@ export default function Dashboard() {
     else if (hour < 18) setGreeting('Good afternoon');
     else setGreeting('Good evening');
   }, []);
-
-  // Mock stats - in real app, fetch from backend
-  const stats = {
-    streak: 5,
-    minutesToday: 24,
-    accuracy: 85,
-    tokensEarned: 120,
-  };
 
   const handleStartSession = () => {
     if (!selectedSubject && settings.subjects.length > 1) {
@@ -73,8 +68,8 @@ export default function Dashboard() {
 
   const handleTaskSelect = (task: MicroTask) => {
     setSelectedTask(task);
-    console.log('Selected task:', task);
-    // TODO: Navigate to task session with task.id
+    // Navigate to chapter test session with the specific task
+    navigate(`/session?subject=${task.subject}&length=15&taskId=${task.id}&topic=${encodeURIComponent(task.topic)}`);
   };
 
   useEffect(() => {
@@ -87,6 +82,14 @@ export default function Dashboard() {
 
   if (!user || !settings.isOnboarded) {
     return null;
+  }
+
+  if (stats.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (

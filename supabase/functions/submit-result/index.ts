@@ -93,6 +93,22 @@ Deno.serve(async (req) => {
     performance.ema_time = updateEMA(Number(performance.ema_time), timeInSeconds);
     performance.ema_hints = updateEMA(Number(performance.ema_hints), submission.hintsUsed);
 
+    // Streak tracking
+    const today = new Date().toISOString().split('T')[0];
+    const lastSessionDate = performance.last_session_date;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
+    if (lastSessionDate === yesterday) {
+      // Continuing streak from yesterday
+      performance.streak_days = (performance.streak_days || 0) + 1;
+    } else if (lastSessionDate !== today) {
+      // Streak broken or starting new
+      performance.streak_days = 1;
+    }
+    // If lastSessionDate === today, keep current streak
+    
+    performance.last_session_date = today;
+
     // Adaptive difficulty adjustment
     const targetTime = 10; // seconds
     if (performance.ema_accuracy > 0.8 && performance.ema_time <= targetTime) {
@@ -131,6 +147,7 @@ Deno.serve(async (req) => {
         success: true,
         nextDifficulty: performance.difficulty_level,
         tokens: performance.tokens,
+        streakDays: performance.streak_days,
         accuracy: performance.ema_accuracy,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
