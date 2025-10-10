@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Brain,
   Clock,
@@ -40,6 +41,7 @@ const item = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { settings } = useAppStore();
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedTask, setSelectedTask] = useState<MicroTask | null>(null);
@@ -75,8 +77,15 @@ export default function Dashboard() {
     // TODO: Navigate to task session with task.id
   };
 
-  if (!settings.isOnboarded) {
-    navigate('/onboarding');
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    } else if (!settings.isOnboarded) {
+      navigate('/onboarding');
+    }
+  }, [user, settings.isOnboarded, navigate]);
+
+  if (!user || !settings.isOnboarded) {
     return null;
   }
 

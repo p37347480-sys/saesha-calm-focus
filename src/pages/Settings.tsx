@@ -9,24 +9,46 @@ import {
   Accessibility,
   User,
   Bell,
+  LogOut,
 } from 'lucide-react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
+import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { settings, updateSettings } = useAppStore();
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
 
   const fontSizes = [
     { value: 'small' as const, label: 'Small', className: 'text-sm' },
     { value: 'medium' as const, label: 'Medium', className: 'text-base' },
     { value: 'large' as const, label: 'Large', className: 'text-lg' },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: 'Signed out',
+        description: 'You have been signed out successfully.',
+      });
+      navigate('/auth');
+    } catch (error: any) {
+      toast({
+        title: 'Sign out failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -212,6 +234,15 @@ export default function Settings() {
               <div className="space-y-3">
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="text-sm font-medium text-muted-foreground">
+                    Email
+                  </p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {user?.email || 'Not available'}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-muted/50 p-4">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Grade
                   </p>
                   <p className="text-lg font-semibold text-foreground">
@@ -234,6 +265,15 @@ export default function Settings() {
                   onClick={() => navigate('/onboarding')}
                 >
                   Update preferences
+                </EnhancedButton>
+
+                <EnhancedButton
+                  variant="outline"
+                  className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Sign Out
                 </EnhancedButton>
               </div>
             </Card>

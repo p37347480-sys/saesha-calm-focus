@@ -59,14 +59,22 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-foreground">Saesha</h1>
             </div>
             
-            {settings.isOnboarded && (
+            <div className="flex gap-2">
+              {settings.isOnboarded && (
+                <EnhancedButton
+                  variant="ghost"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Dashboard
+                </EnhancedButton>
+              )}
               <EnhancedButton
-                variant="ghost"
-                onClick={() => navigate('/dashboard')}
+                variant="outline"
+                onClick={() => navigate('/auth')}
               >
-                Dashboard
+                Sign In
               </EnhancedButton>
-            )}
+            </div>
           </motion.div>
         </header>
 
