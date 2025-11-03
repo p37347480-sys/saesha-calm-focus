@@ -4,11 +4,11 @@ const corsHeaders = {
 };
 
 interface QuestionRequest {
-  subject: string;
-  topic: string;
-  difficulty: number;
-  taskType: string;
-  grade: number;
+  chapter: string;
+  gameTitle: string;
+  gameConcept: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  questionNumber?: number;
 }
 
 Deno.serve(async (req) => {
@@ -17,71 +17,94 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { subject, topic, difficulty, taskType, grade }: QuestionRequest = await req.json();
+    const request: QuestionRequest = await req.json();
     
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
     }
 
-    // Create adaptive system prompt based on task type
-    const systemPrompt = `You are an expert CBSE educator for Class ${grade}. Generate high-quality ${taskType} questions for ${subject} - ${topic}.
+    // Map difficulty to detailed level description
+    const difficultyMap = {
+      easy: 'Easy level - Focus on basic concepts, simple calculations, single-step problems. Target time: 2-3 minutes per question.',
+      medium: 'Medium level - Multi-step problems, require conceptual understanding and application. Target time: 4-5 minutes per question.',
+      hard: 'Hard level - Complex problems, advanced applications, require deep understanding and multiple concepts. Target time: 6-8 minutes per question.'
+    };
 
-Task Types Guide:
-- Speed Concept: Quick 3-4 min recall questions (MCQ format)
-- Problem Breakdown: 6-8 min step-by-step problem solving
-- Puzzle: 5-6 min pattern/logic-based challenges
-- Reading+Extraction: 5-6 min comprehension with passage
-- Flashcard: 2-3 min quick definition/term matching
+    // Build a dynamic prompt based on the game context
+    const systemPrompt = `You are an educational mathematics content generator for Class 11-12 students (Indian CBSE curriculum).
 
-Difficulty Levels:
-1 = Basic recall
-2 = Understanding + simple application
-3 = Analysis + moderate problem solving
-4 = Complex synthesis
-5 = Advanced application + critical thinking
+Generate a mathematics question for the game "${request.gameTitle}" which focuses on "${request.gameConcept}" within the chapter "${request.chapter}".
+
+Difficulty: ${difficultyMap[request.difficulty]}
+
+IMPORTANT FORMATTING RULES:
+1. Return ONLY valid JSON, no markdown code blocks
+2. Use proper JSON escaping for special characters
+3. Do not include any text before or after the JSON object
+4. Use LaTeX notation for mathematical expressions (e.g., \\frac{1}{2}, x^2, \\sqrt{x})
 
 Return a JSON object with this exact structure:
 {
-  "id": "unique_id",
-  "subject": "${subject}",
-  "topic": "${topic}",
-  "task_type": "${taskType}",
-  "difficulty": ${difficulty},
-  "grade": ${grade},
-  "prompt": "The question text",
-  "answer_options": ["Option A", "Option B", "Option C", "Option D"],
-  "correct_answer": 0,
-  "hints": ["Hint 1", "Hint 2"],
-  "explanation": "Detailed explanation of the answer",
-  "passage": "Optional passage for Reading+Extraction type",
-  "estimated_time_seconds": 180
-}`;
+  "id": "unique-question-id",
+  "question": "The question text (use clear mathematical notation with LaTeX where needed)",
+  "options": ["option1", "option2", "option3", "option4"],
+  "correctAnswer": 0,
+  "explanation": "Step-by-step explanation of the solution with clear reasoning",
+  "hint": "A helpful hint that guides thinking without giving away the answer directly",
+  "topic": "${request.gameConcept}",
+  "difficulty": "${request.difficulty}"
+}
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+Make the question:
+- Contextually relevant to the game theme "${request.gameTitle}"
+- Age-appropriate for Class 11-12 students
+- Clear and unambiguous with proper mathematical notation
+- Include visual or real-world context when possible
+- Use Indian curriculum notation (₹ for currency, meters for distance, etc.)
+- Aligned with CBSE Class 11-12 standards
+- ADHD-friendly: clear structure, visual cues, engaging context
+
+The correctAnswer should be the index (0-3) of the correct option.
+Options should be distinct and plausible to test understanding.`;
+
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate a ${taskType} question for ${subject} - ${topic} at difficulty level ${difficulty}.` }
+          { role: 'user', content: `Generate question ${request.questionNumber || 1} for this game level. Make it engaging and contextually relevant to the game theme.` }
         ],
-        response_format: { type: "json_object" },
+        temperature: 0.8,
+        response_format: { type: "json_object" }
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+    if (!openAIResponse.ok) {
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
 
-    const data = await response.json();
-    const question = JSON.parse(data.choices[0].message.content);
+    const openAIData = await openAIResponse.json();
+    let generatedContent = openAIData.choices[0].message.content;
+    
+    // Clean up the response - remove markdown code blocks if present
+    generatedContent = generatedContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    // Parse the JSON response
+    let question;
+    try {
+      question = JSON.parse(generatedContent);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', generatedContent);
+      throw new Error('Invalid JSON response from AI');
+    }
 
     return new Response(JSON.stringify(question), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

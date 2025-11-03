@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.get-user-stats]
 verify_jwt = true
+
+[functions.get-games]
+verify_jwt = true
+
+[functions.update-game-progress]
+verify_jwt = true

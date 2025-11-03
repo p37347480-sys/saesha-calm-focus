@@ -53,23 +53,78 @@ Deno.serve(async (req) => {
     const correctToday = todaySessions?.reduce((sum, s) => sum + (s.tasks_correct || 0), 0) || 0;
     const accuracyToday = tasksToday > 0 ? (correctToday / tasksToday) * 100 : 0;
 
+    // Get game progress for overall stats
+    const { data: gameProgress, error: progressError } = await supabase
+      .from('game_progress')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (progressError) throw progressError;
+
+    // Get recent rewards
+    const { data: rewards, error: rewardsError } = await supabase
+      .from('rewards')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('earned_at', { ascending: false })
+      .limit(10);
+
+    if (rewardsError) throw rewardsError;
+
+    // Calculate total stars earned
+    const totalStars = gameProgress?.reduce((sum, p) => sum + (p.stars_earned || 0), 0) || 0;
+    
+    // Calculate completed levels (any difficulty)
+    const completedLevels = gameProgress?.filter(p => p.completed_at).length || 0;
+
     // Calculate streak
     const maxStreak = performance?.reduce((max, p) => Math.max(max, p.streak_days || 0), 0) || 0;
 
     // Calculate total tokens
     const totalTokens = performance?.reduce((sum, p) => sum + (p.tokens || 0), 0) || 0;
 
+    // Get chapter progress
+    const { data: allGames } = await supabase
+      .from('games')
+      .select('id, chapter, game_number, game_title');
+
+    const chapterStats: Record<string, { totalGames: number; completedGames: number; totalStars: number }> = {};
+    if (allGames) {
+      for (const game of allGames) {
+        if (!chapterStats[game.chapter]) {
+          chapterStats[game.chapter] = {
+            totalGames: 0,
+            completedGames: 0,
+            totalStars: 0,
+          };
+        }
+        chapterStats[game.chapter].totalGames++;
+
+        const gameProgressData = gameProgress?.filter(p => p.game_id === game.id) || [];
+        const hasCompleted = gameProgressData.some(p => p.completed_at);
+        if (hasCompleted) {
+          chapterStats[game.chapter].completedGames++;
+        }
+        chapterStats[game.chapter].totalStars += gameProgressData.reduce((sum, p) => sum + (p.stars_earned || 0), 0);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         profile,
         performance,
         todaySessions,
+        gameProgress,
+        rewards,
+        chapterStats,
         stats: {
           minutesToday: Math.round(minutesToday),
           tasksToday,
           accuracyToday: Math.round(accuracyToday),
           streak: maxStreak,
           totalTokens,
+          totalStars,
+          completedLevels,
         },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

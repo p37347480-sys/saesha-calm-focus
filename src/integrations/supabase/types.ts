@@ -52,6 +52,86 @@ export type Database = {
           },
         ]
       }
+      game_progress: {
+        Row: {
+          best_accuracy: number | null
+          completed_at: string | null
+          created_at: string | null
+          difficulty: string
+          game_id: string
+          hints_used: number | null
+          id: string
+          questions_completed: number | null
+          stars_earned: number | null
+          unlocked: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          best_accuracy?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          difficulty: string
+          game_id: string
+          hints_used?: number | null
+          id?: string
+          questions_completed?: number | null
+          stars_earned?: number | null
+          unlocked?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          best_accuracy?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          difficulty?: string
+          game_id?: string
+          hints_used?: number | null
+          id?: string
+          questions_completed?: number | null
+          stars_earned?: number | null
+          unlocked?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_progress_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          chapter: string
+          created_at: string | null
+          game_concept: string
+          game_number: number
+          game_title: string
+          id: string
+        }
+        Insert: {
+          chapter: string
+          created_at?: string | null
+          game_concept: string
+          game_number: number
+          game_title: string
+          id?: string
+        }
+        Update: {
+          chapter?: string
+          created_at?: string | null
+          game_concept?: string
+          game_number?: number
+          game_title?: string
+          id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -79,11 +159,43 @@ export type Database = {
         }
         Relationships: []
       }
+      rewards: {
+        Row: {
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          reward_description: string | null
+          reward_title: string
+          reward_type: string
+          user_id: string
+        }
+        Insert: {
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reward_description?: string | null
+          reward_title: string
+          reward_type: string
+          user_id: string
+        }
+        Update: {
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          reward_description?: string | null
+          reward_title?: string
+          reward_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string | null
+          difficulty: string | null
           duration_seconds: number | null
           end_time: string | null
+          game_id: string | null
           id: string
           start_time: string | null
           subject: string
@@ -94,8 +206,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          difficulty?: string | null
           duration_seconds?: number | null
           end_time?: string | null
+          game_id?: string | null
           id?: string
           start_time?: string | null
           subject: string
@@ -106,8 +220,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          difficulty?: string | null
           duration_seconds?: number | null
           end_time?: string | null
+          game_id?: string | null
           id?: string
           start_time?: string | null
           subject?: string
@@ -116,7 +232,15 @@ export type Database = {
           total_hints_used?: number | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_results: {
         Row: {
