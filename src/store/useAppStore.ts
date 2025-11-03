@@ -2,17 +2,22 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type Grade = 11 | 12;
-export type Subject = 'Physics' | 'Chemistry' | 'Math' | 'Biology' | 'English';
-export type SessionLength = 3 | 6 | 10;
+export type Chapter = 
+  | 'Trigonometry' 
+  | 'Algebra' 
+  | 'Volume & Surface Area' 
+  | 'Probability' 
+  | 'Fractions/Decimals/Percentages/Interest';
 
 interface UserSettings {
   grade?: Grade;
-  subjects: Subject[];
-  sessionLength: SessionLength;
+  favoriteChapters: Chapter[];
   useHints: boolean;
   reducedMotion: boolean;
   dyslexiaFont: boolean;
   fontSize: 'small' | 'medium' | 'large';
+  soundEnabled: boolean;
+  animationIntensity: 'low' | 'medium' | 'high';
   isOnboarded: boolean;
 }
 
@@ -24,12 +29,13 @@ interface AppState {
 }
 
 const defaultSettings: UserSettings = {
-  subjects: [],
-  sessionLength: 6,
+  favoriteChapters: [],
   useHints: true,
   reducedMotion: false,
   dyslexiaFont: false,
   fontSize: 'medium',
+  soundEnabled: true,
+  animationIntensity: 'medium',
   isOnboarded: false,
 };
 

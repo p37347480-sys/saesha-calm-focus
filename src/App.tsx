@@ -6,10 +6,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
+import ChapterSelect from "./pages/ChapterSelect";
+import GameSelect from "./pages/GameSelect";
 import Session from "./pages/Session";
 import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 
@@ -49,7 +51,23 @@ const App = () => (
               }
             />
             <Route
-              path="/session"
+              path="/chapters"
+              element={
+                <ProtectedRoute>
+                  <ChapterSelect />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/games/:chapter"
+              element={
+                <ProtectedRoute>
+                  <GameSelect />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/session/:gameId/:difficulty"
               element={
                 <ProtectedRoute>
                   <Session />

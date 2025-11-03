@@ -186,31 +186,6 @@ export default function Settings() {
                     }
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="text-base">Session length</Label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[3, 6, 10].map((length) => (
-                      <button
-                        key={length}
-                        onClick={() =>
-                          updateSettings({ sessionLength: length as 3 | 6 | 10 })
-                        }
-                        className={cn(
-                          'rounded-xl border-2 p-3 text-center transition-all',
-                          settings.sessionLength === length
-                            ? 'border-primary bg-gradient-calm'
-                            : 'border-border hover:border-primary/50 hover:bg-muted'
-                        )}
-                      >
-                        <span className="text-2xl font-bold">{length}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          minutes
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </Card>
           </motion.div>
@@ -252,10 +227,12 @@ export default function Settings() {
 
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="text-sm font-medium text-muted-foreground">
-                    Subjects
+                    Favorite Chapters
                   </p>
                   <p className="text-lg font-semibold text-foreground">
-                    {settings.subjects.join(', ')}
+                    {settings.favoriteChapters.length > 0 
+                      ? settings.favoriteChapters.join(', ') 
+                      : 'None selected'}
                   </p>
                 </div>
 

@@ -7,7 +7,17 @@ interface UserStats {
   minutesToday: number;
   accuracy: number;
   tokensEarned: number;
+  totalStars: number;
+  completedLevels: number;
   loading: boolean;
+}
+
+interface ChapterStats {
+  [chapter: string]: {
+    totalGames: number;
+    completedGames: number;
+    totalStars: number;
+  };
 }
 
 export const useUserStats = () => {
@@ -17,12 +27,24 @@ export const useUserStats = () => {
     minutesToday: 0,
     accuracy: 0,
     tokensEarned: 0,
+    totalStars: 0,
+    completedLevels: 0,
     loading: true,
   });
+  const [chapterStats, setChapterStats] = useState<ChapterStats>({});
 
   useEffect(() => {
     if (!user) {
-      setStats({ streak: 0, minutesToday: 0, accuracy: 0, tokensEarned: 0, loading: false });
+      setStats({ 
+        streak: 0, 
+        minutesToday: 0, 
+        accuracy: 0, 
+        tokensEarned: 0,
+        totalStars: 0,
+        completedLevels: 0,
+        loading: false 
+      });
+      setChapterStats({});
       return;
     }
 
@@ -47,20 +69,33 @@ export const useUserStats = () => {
         const maxStreak = Math.max(...allPerformance.map((p: any) => p.streak_days || 0), 0);
 
         setStats({
-          streak: maxStreak,
-          minutesToday: todayMinutes,
-          accuracy: avgAccuracy,
-          tokensEarned: totalTokens,
+          streak: data.stats?.streak || 0,
+          minutesToday: data.stats?.minutesToday || 0,
+          accuracy: data.stats?.accuracyToday || 0,
+          tokensEarned: data.stats?.totalTokens || 0,
+          totalStars: data.stats?.totalStars || 0,
+          completedLevels: data.stats?.completedLevels || 0,
           loading: false,
         });
+
+        setChapterStats(data.chapterStats || {});
       } catch (error) {
         console.error('Failed to fetch user stats:', error);
-        setStats({ streak: 0, minutesToday: 0, accuracy: 0, tokensEarned: 0, loading: false });
+        setStats({ 
+          streak: 0, 
+          minutesToday: 0, 
+          accuracy: 0, 
+          tokensEarned: 0,
+          totalStars: 0,
+          completedLevels: 0,
+          loading: false 
+        });
+        setChapterStats({});
       }
     };
 
     fetchStats();
   }, [user]);
 
-  return stats;
+  return { stats, chapterStats };
 };

@@ -4,25 +4,31 @@ import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { CalmWorld } from '@/components/3d/CalmWorld';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore, Grade, Subject, SessionLength } from '@/store/useAppStore';
+import { useAppStore, Grade, Chapter } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 
-const STEPS = 4;
+const STEPS = 3;
+
+const chapters: Chapter[] = [
+  'Trigonometry',
+  'Algebra',
+  'Volume & Surface Area',
+  'Probability',
+  'Fractions/Decimals/Percentages/Interest',
+];
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { updateSettings, completeOnboarding } = useAppStore();
   const [step, setStep] = useState(1);
   const [grade, setGrade] = useState<Grade | undefined>();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [sessionLength, setSessionLength] = useState<SessionLength>(6);
+  const [favoriteChapters, setFavoriteChapters] = useState<Chapter[]>([]);
   const [useHints, setUseHints] = useState(true);
 
   const handleComplete = () => {
     updateSettings({
       grade,
-      subjects,
-      sessionLength,
+      favoriteChapters,
       useHints,
     });
     completeOnboarding();
@@ -32,18 +38,17 @@ export default function Onboarding() {
   const canProgress = () => {
     switch (step) {
       case 1: return grade !== undefined;
-      case 2: return subjects.length > 0;
+      case 2: return true; // Favorite chapters is optional
       case 3: return true;
-      case 4: return true;
       default: return false;
     }
   };
 
-  const toggleSubject = (subject: Subject) => {
-    setSubjects(prev =>
-      prev.includes(subject)
-        ? prev.filter(s => s !== subject)
-        : [...prev, subject]
+  const toggleChapter = (chapter: Chapter) => {
+    setFavoriteChapters(prev =>
+      prev.includes(chapter)
+        ? prev.filter(c => c !== chapter)
+        : [...prev, chapter]
     );
   };
 
@@ -118,7 +123,7 @@ export default function Onboarding() {
                 </motion.div>
               )}
 
-              {/* Step 2: Subjects */}
+              {/* Step 2: Favorite Chapters */}
               {step === 2 && (
                 <motion.div
                   key="step2"
@@ -129,27 +134,27 @@ export default function Onboarding() {
                 >
                   <div>
                     <h2 className="mb-2 text-3xl font-bold text-foreground">
-                      What subjects interest you?
+                      Any favorite chapters?
                     </h2>
                     <p className="text-muted-foreground">
-                      Select one or more subjects to practice
+                      Select your favorites (optional)
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {(['Physics', 'Chemistry', 'Math', 'Biology', 'English'] as Subject[]).map((subject) => (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {chapters.map((chapter) => (
                       <button
-                        key={subject}
-                        onClick={() => toggleSubject(subject)}
+                        key={chapter}
+                        onClick={() => toggleChapter(chapter)}
                         className={cn(
-                          "relative rounded-xl border-2 p-4 text-center transition-all",
-                          subjects.includes(subject)
+                          "relative rounded-xl border-2 p-4 text-left transition-all",
+                          favoriteChapters.includes(chapter)
                             ? "border-primary bg-gradient-calm shadow-sm"
                             : "border-border hover:border-primary/50 hover:bg-muted"
                         )}
                       >
-                        <span className="font-semibold">{subject}</span>
-                        {subjects.includes(subject) && (
+                        <span className="font-semibold text-sm">{chapter}</span>
+                        {favoriteChapters.includes(chapter) && (
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
@@ -164,48 +169,10 @@ export default function Onboarding() {
                 </motion.div>
               )}
 
-              {/* Step 3: Session Length */}
+              {/* Step 3: Hints */}
               {step === 3 && (
                 <motion.div
                   key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div>
-                    <h2 className="mb-2 text-3xl font-bold text-foreground">
-                      Preferred session length?
-                    </h2>
-                    <p className="text-muted-foreground">
-                      Short sessions help maintain focus
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    {([3, 6, 10] as SessionLength[]).map((length) => (
-                      <button
-                        key={length}
-                        onClick={() => setSessionLength(length)}
-                        className={cn(
-                          "rounded-2xl border-2 p-6 text-center transition-all",
-                          sessionLength === length
-                            ? "border-primary bg-gradient-calm shadow-md"
-                            : "border-border hover:border-primary/50 hover:bg-muted"
-                        )}
-                      >
-                        <div className="text-3xl font-bold">{length}</div>
-                        <div className="text-sm text-muted-foreground">minutes</div>
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Step 4: Hints */}
-              {step === 4 && (
-                <motion.div
-                  key="step4"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
