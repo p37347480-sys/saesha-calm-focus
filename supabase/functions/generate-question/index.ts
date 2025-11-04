@@ -38,32 +38,46 @@ Generate a mathematics question for the game "${request.gameTitle}" which focuse
 
 Difficulty: ${difficultyMap[request.difficulty]}
 
-IMPORTANT FORMATTING RULES:
+CRITICAL FORMATTING RULES:
 1. Return ONLY valid JSON, no markdown code blocks
 2. Use proper JSON escaping for special characters
 3. Do not include any text before or after the JSON object
-4. Use LaTeX notation for mathematical expressions (e.g., \\frac{1}{2}, x^2, \\sqrt{x})
+4. Use inline LaTeX notation within dollar signs for ALL mathematical expressions: $x^2$, $\\frac{1}{2}$, $\\sin \\theta$
+5. For display equations, use double dollar signs: $$\\int_0^1 x^2 dx$$
+6. Keep the narrative simple and engaging - avoid complex backstories
+7. Write in clear, conversational English that students can easily read
 
 Return a JSON object with this exact structure:
 {
   "id": "unique-question-id",
-  "question": "The question text (use clear mathematical notation with LaTeX where needed)",
-  "options": ["option1", "option2", "option3", "option4"],
+  "question": "Write a clear, engaging question using $LaTeX$ for math. Keep it simple and focused. Example: 'In a triangle ABC, if $\\angle A = 30^\\circ$ and $\\angle B = 60^\\circ$, find $\\angle C$.'",
+  "options": [
+    "Option 1 with $math$ if needed",
+    "Option 2 with $math$ if needed", 
+    "Option 3 with $math$ if needed",
+    "Option 4 with $math$ if needed"
+  ],
   "correctAnswer": 0,
-  "explanation": "Step-by-step explanation of the solution with clear reasoning",
-  "hint": "A helpful hint that guides thinking without giving away the answer directly",
+  "explanation": "Clear step-by-step explanation using $LaTeX$ for mathematical expressions. Make it educational and easy to understand.",
+  "hint": "A helpful hint using $LaTeX$ notation for any mathematical expressions. Guide their thinking without giving away the answer.",
   "topic": "${request.gameConcept}",
   "difficulty": "${request.difficulty}"
 }
 
+IMPORTANT EXAMPLES:
+- Write: "Find the value of $\\sin 30^\\circ$" NOT "Find the value of sin 30°"
+- Write: "If $x^2 + 5x + 6 = 0$" NOT "If x² + 5x + 6 = 0"
+- Write: "Calculate $\\frac{3}{4} + \\frac{1}{2}$" NOT "Calculate 3/4 + 1/2"
+- Write: "The angle $\\theta$ measures..." NOT "The angle θ measures..."
+
 Make the question:
-- Contextually relevant to the game theme "${request.gameTitle}"
+- Clear and conversational, like a friendly teacher explaining
+- Use simple sentences, avoid complex game narratives
 - Age-appropriate for Class 11-12 students
-- Clear and unambiguous with proper mathematical notation
 - Include visual or real-world context when possible
 - Use Indian curriculum notation (₹ for currency, meters for distance, etc.)
 - Aligned with CBSE Class 11-12 standards
-- ADHD-friendly: clear structure, visual cues, engaging context
+- ADHD-friendly: clear structure, simple language, focused question
 
 The correctAnswer should be the index (0-3) of the correct option.
 Options should be distinct and plausible to test understanding.`;

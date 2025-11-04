@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
+import { EnhancedQuestionCard } from '@/components/EnhancedQuestionCard';
 
 interface Question {
   id: string;
@@ -315,132 +316,33 @@ export default function Session() {
                 exit={{ opacity: 0, y: -20 }}
                 className="mx-auto max-w-3xl"
               >
-                <Card className="border-border/50 bg-gradient-card p-8 shadow-lg">
-                  {/* Question */}
-                  <div className="mb-6">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-medium text-primary">
-                        {currentQuestion.topic}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        Difficulty: {currentQuestion.difficulty}/5
-                      </span>
-                    </div>
-                    <h2 className="text-2xl font-semibold text-foreground">
-                      {currentQuestion.question}
-                    </h2>
-                  </div>
-
-                  {/* Options */}
-                  <div className="mb-6 space-y-3">
-                    {currentQuestion?.options?.map((option, index) => {
-                      const isSelected = selectedAnswer === index;
-                      const isCorrect = index === currentQuestion.correctAnswer;
-                      const showCorrectness = showResult;
-
-                      return (
-                        <motion.button
-                          key={index}
-                          whileHover={{ scale: showResult ? 1 : 1.02 }}
-                          whileTap={{ scale: showResult ? 1 : 0.98 }}
-                          onClick={() => !showResult && setSelectedAnswer(index)}
-                          disabled={showResult}
-                          className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
-                            showCorrectness
-                              ? isCorrect
-                                ? 'border-success bg-success/10'
-                                : isSelected
-                                  ? 'border-destructive bg-destructive/10'
-                                  : 'border-border'
-                              : isSelected
-                                ? 'border-primary bg-gradient-calm'
-                                : 'border-border hover:border-primary/50 hover:bg-muted'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="flex-1">{option}</span>
-                            {showCorrectness && isCorrect && (
-                              <CheckCircle className="h-5 w-5 text-success" />
-                            )}
-                            {showCorrectness && isSelected && !isCorrect && (
-                              <XCircle className="h-5 w-5 text-destructive" />
-                            )}
-                          </div>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Hint */}
-                  {showHint && !showResult && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mb-6 rounded-xl bg-accent/20 p-4"
+                <EnhancedQuestionCard
+                  question={currentQuestion}
+                  selectedAnswer={selectedAnswer}
+                  onSelectAnswer={setSelectedAnswer}
+                  showResult={showResult}
+                  showHint={showHint}
+                  onToggleHint={() => setShowHint(true)}
+                  onSubmit={handleSubmit}
+                  onSkip={handleSkip}
+                  submitting={submitting}
+                />
+                
+                {showResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 flex justify-center"
+                  >
+                    <EnhancedButton
+                      variant="hero"
+                      onClick={handleNext}
+                      className="shadow-lg shadow-primary/30"
                     >
-                      <div className="flex gap-3">
-                        <Lightbulb className="h-5 w-5 flex-shrink-0 text-accent-foreground" />
-                        <p className="text-sm text-foreground">
-                          Consider the fundamental concepts of {currentQuestion.topic}.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Explanation */}
-                  {showResult && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mb-6 rounded-xl bg-primary/10 p-4"
-                    >
-                      <h3 className="mb-2 font-semibold text-foreground">
-                        Explanation
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {currentQuestion.explanation}
-                      </p>
-                    </motion.div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between gap-4">
-                    {!showResult ? (
-                      <>
-                        <div className="flex gap-2">
-                          {!showHint && (
-                            <EnhancedButton
-                              variant="outline"
-                              onClick={() => setShowHint(true)}
-                            >
-                              <Lightbulb className="mr-2 h-4 w-4" />
-                              Hint
-                            </EnhancedButton>
-                          )}
-                          <EnhancedButton variant="ghost" onClick={handleSkip}>
-                            <SkipForward className="mr-2 h-4 w-4" />
-                            Skip
-                          </EnhancedButton>
-                        </div>
-                        <EnhancedButton
-                          variant="hero"
-                          onClick={handleSubmit}
-                          disabled={selectedAnswer === null || submitting}
-                        >
-                          {submitting ? 'Submitting...' : 'Submit'}
-                        </EnhancedButton>
-                      </>
-                    ) : (
-                      <EnhancedButton
-                        variant="hero"
-                        onClick={handleNext}
-                        className="ml-auto"
-                      >
-                        Next Question
-                      </EnhancedButton>
-                    )}
-                  </div>
-                </Card>
+                      Next Question
+                    </EnhancedButton>
+                  </motion.div>
+                )}
               </motion.div>
             ) : null}
           </AnimatePresence>
