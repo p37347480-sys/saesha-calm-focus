@@ -159,6 +159,56 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: number
+          created_at: string | null
+          difficulty: string
+          explanation: string
+          game_id: string
+          hint: string | null
+          id: string
+          options: Json
+          question_text: string
+          topic: string
+          updated_at: string | null
+        }
+        Insert: {
+          correct_answer: number
+          created_at?: string | null
+          difficulty: string
+          explanation: string
+          game_id: string
+          hint?: string | null
+          id?: string
+          options: Json
+          question_text: string
+          topic: string
+          updated_at?: string | null
+        }
+        Update: {
+          correct_answer?: number
+          created_at?: string | null
+          difficulty?: string
+          explanation?: string
+          game_id?: string
+          hint?: string | null
+          id?: string
+          options?: Json
+          question_text?: string
+          topic?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rewards: {
         Row: {
           earned_at: string | null
@@ -345,6 +395,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_questions_for_game: {
+        Args: { p_count?: number; p_difficulty: string; p_game_id: string }
+        Returns: undefined
+      }
       increment_session_stats: {
         Args: { p_is_correct: boolean; p_session_id: string }
         Returns: undefined

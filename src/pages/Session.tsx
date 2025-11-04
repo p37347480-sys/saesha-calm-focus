@@ -123,22 +123,56 @@ export default function Session() {
     if (!gameToUse || !difficulty) return;
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-question', {
-        body: {
-          chapter: gameToUse.chapter,
-          gameTitle: gameToUse.title,
-          gameConcept: gameToUse.concept,
-          difficulty: difficulty,
-        },
-      });
+      // First, try to fetch from pre-generated questions
+      const { data: questions, error: fetchError } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('game_id', gameToUse.id)
+        .eq('difficulty', difficulty)
+        .limit(20);
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
 
-      if (!data || !data.options) {
-        throw new Error('Invalid question data received');
+      let questionData;
+      
+      if (questions && questions.length > 0) {
+        // Randomly select a question from available ones
+        const randomIndex = Math.floor(Math.random() * questions.length);
+        const dbQuestion = questions[randomIndex];
+        
+        questionData = {
+          id: dbQuestion.id,
+          question: dbQuestion.question_text,
+          options: Array.isArray(dbQuestion.options) 
+            ? dbQuestion.options 
+            : JSON.parse(JSON.stringify(dbQuestion.options)),
+          correctAnswer: dbQuestion.correct_answer,
+          explanation: dbQuestion.explanation,
+          hint: dbQuestion.hint || '',
+          topic: dbQuestion.topic,
+          difficulty: difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3,
+        };
+      } else {
+        // Fallback: Generate question on-the-fly
+        console.log('No pre-generated questions found, generating new one...');
+        const { data, error: questionError } = await supabase.functions.invoke('generate-question', {
+          body: {
+            chapter: gameToUse.chapter,
+            gameTitle: gameToUse.title,
+            gameConcept: gameToUse.concept,
+            difficulty: difficulty,
+          },
+        });
+
+        if (questionError) throw questionError;
+        if (!data || !data.options) {
+          throw new Error('Invalid question data received');
+        }
+
+        questionData = data;
       }
 
-      setCurrentQuestion(data);
+      setCurrentQuestion(questionData);
     } catch (error: any) {
       console.error('Failed to load question:', error);
       toast({
