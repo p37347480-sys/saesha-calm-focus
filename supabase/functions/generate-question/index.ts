@@ -40,12 +40,13 @@ Difficulty: ${difficultyMap[request.difficulty]}
 
 CRITICAL FORMATTING RULES:
 1. Return ONLY valid JSON, no markdown code blocks
-2. Use proper JSON escaping for special characters
-3. Do not include any text before or after the JSON object
-4. Use inline LaTeX notation within dollar signs for ALL mathematical expressions: $x^2$, $\\frac{1}{2}$, $\\sin \\theta$
-5. For display equations, use double dollar signs: $$\\int_0^1 x^2 dx$$
-6. Keep the narrative simple and engaging - avoid complex backstories
-7. Write in clear, conversational English that students can easily read
+2. IMPORTANT: In JSON strings, ALL backslashes must be escaped as double backslashes (\\\\)
+3. For LaTeX in JSON: use \\\\frac not \\frac, \\\\sin not \\sin, \\\\sqrt not \\sqrt, etc.
+4. Do not include any text before or after the JSON object
+5. Use inline LaTeX notation within dollar signs for ALL mathematical expressions: $x^2$, $\\\\frac{1}{2}$, $\\\\sin \\\\theta$
+6. For display equations, use double dollar signs: $$\\\\int_0^1 x^2 dx$$
+7. Keep the narrative simple and engaging - avoid complex backstories
+8. Write in clear, conversational English that students can easily read
 
 Return a JSON object with this exact structure:
 {
@@ -64,11 +65,11 @@ Return a JSON object with this exact structure:
   "difficulty": "${request.difficulty}"
 }
 
-IMPORTANT EXAMPLES:
-- Write: "Find the value of $\\sin 30^\\circ$" NOT "Find the value of sin 30°"
+IMPORTANT EXAMPLES (remember to double-escape backslashes in JSON):
+- Write: "Find the value of $\\\\sin 30^\\\\circ$" NOT "Find the value of sin 30°"
 - Write: "If $x^2 + 5x + 6 = 0$" NOT "If x² + 5x + 6 = 0"
-- Write: "Calculate $\\frac{3}{4} + \\frac{1}{2}$" NOT "Calculate 3/4 + 1/2"
-- Write: "The angle $\\theta$ measures..." NOT "The angle θ measures..."
+- Write: "Calculate $\\\\frac{3}{4} + \\\\frac{1}{2}$" NOT "Calculate 3/4 + 1/2"
+- Write: "The angle $\\\\theta$ measures..." NOT "The angle θ measures..."
 
 Make the question:
 - Clear and conversational, like a friendly teacher explaining
@@ -124,6 +125,19 @@ Options should be distinct and plausible to test understanding.`;
     }
     
     generatedContent = generatedContent.substring(firstBrace, lastBrace + 1);
+    
+    // Fix common LaTeX escaping issues in JSON strings
+    // The AI sometimes uses single backslashes in JSON which is invalid
+    // We need to escape backslashes that appear before LaTeX commands
+    // This regex finds backslashes followed by common LaTeX commands and escapes them
+    const latexCommands = ['frac', 'sqrt', 'sin', 'cos', 'tan', 'theta', 'alpha', 'beta', 'gamma', 'delta', 'pi', 'int', 'sum', 'prod', 'lim', 'infty', 'text', 'cdot', 'times', 'div', 'pm', 'leq', 'geq', 'neq', 'approx', 'equiv', 'circ', 'angle'];
+    
+    // Create a regex pattern for all LaTeX commands
+    const commandPattern = latexCommands.join('|');
+    const latexRegex = new RegExp(`(?<!\\\\)\\\\(${commandPattern})`, 'g');
+    
+    // Escape single backslashes before LaTeX commands
+    generatedContent = generatedContent.replace(latexRegex, '\\\\$1');
     
     // Parse the JSON response
     let question;
