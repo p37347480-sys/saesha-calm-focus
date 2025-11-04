@@ -109,8 +109,21 @@ Options should be distinct and plausible to test understanding.`;
     
     console.log('Raw AI response:', generatedContent);
     
-    // Clean up the response - remove markdown code blocks if present
-    generatedContent = generatedContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Clean up the response - handle various formats
+    // Remove markdown code blocks
+    generatedContent = generatedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    // Remove any leading/trailing whitespace
+    generatedContent = generatedContent.trim();
+    // Remove any text before the first { or after the last }
+    const firstBrace = generatedContent.indexOf('{');
+    const lastBrace = generatedContent.lastIndexOf('}');
+    
+    if (firstBrace === -1 || lastBrace === -1) {
+      console.error('No JSON object found in response:', generatedContent);
+      throw new Error('No valid JSON object found in AI response');
+    }
+    
+    generatedContent = generatedContent.substring(firstBrace, lastBrace + 1);
     
     // Parse the JSON response
     let question;
@@ -118,13 +131,22 @@ Options should be distinct and plausible to test understanding.`;
       question = JSON.parse(generatedContent);
     } catch (parseError) {
       console.error('Failed to parse AI response:', generatedContent);
+      console.error('Parse error:', parseError);
       throw new Error('Invalid JSON response from AI');
     }
 
-    // Ensure all required fields are present
+    // Validate required fields
     if (!question.options || !Array.isArray(question.options)) {
+      console.error('Invalid question format - missing or invalid options:', question);
       throw new Error('Invalid question format: options must be an array');
     }
+
+    if (typeof question.correctAnswer !== 'number' || question.correctAnswer < 0 || question.correctAnswer >= question.options.length) {
+      console.error('Invalid correctAnswer:', question.correctAnswer);
+      throw new Error('Invalid question format: correctAnswer must be a valid index');
+    }
+
+    console.log('Successfully parsed question:', question.id);
 
     return new Response(JSON.stringify(question), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
