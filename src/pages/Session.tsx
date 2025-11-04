@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain,
-  Clock,
   CheckCircle,
   XCircle,
   Lightbulb,
@@ -13,11 +12,10 @@ import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { CalmWorld } from '@/components/3d/CalmWorld';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 
 interface Question {
@@ -30,15 +28,20 @@ interface Question {
   difficulty: number;
 }
 
+interface GameData {
+  id: string;
+  chapter: string;
+  title: string;
+  concept: string;
+}
+
 export default function Session() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { gameId, difficulty } = useParams<{ gameId: string; difficulty: 'easy' | 'medium' | 'hard' }>();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const subject = searchParams.get('subject') || 'Math';
-  const sessionLength = parseInt(searchParams.get('length') || '6');
-
+  const [gameData, setGameData] = useState<GameData | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -55,35 +58,49 @@ export default function Session() {
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const sessionTimeMs = sessionLength * 60 * 1000;
-  const elapsedTime = Date.now() - startTime;
-  const progress = Math.min((elapsedTime / sessionTimeMs) * 100, 100);
-
   useEffect(() => {
-    if (!user) {
+    if (!user || !gameId || !difficulty) {
       navigate('/auth');
       return;
     }
     initializeSession();
-  }, [user]);
+  }, [user, gameId, difficulty]);
 
   const initializeSession = async () => {
     try {
+      // Fetch game data
+      const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single();
+
+      if (gameError) throw gameError;
+
+      setGameData({
+        id: game.id,
+        chapter: game.chapter,
+        title: game.game_title,
+        concept: game.game_concept,
+      });
+
       // Create session
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
-        .insert({
+        .insert([{
           user_id: user!.id,
-          subject,
+          game_id: gameId,
+          difficulty: difficulty,
           start_time: new Date().toISOString(),
-        })
+          subject: game.chapter,
+        }])
         .select()
         .single();
 
       if (sessionError) throw sessionError;
 
       setSessionId(sessionData.id);
-      loadNextQuestion(sessionData.id);
+      loadNextQuestion(sessionData.id, game);
     } catch (error: any) {
       toast({
         title: 'Failed to start session',
@@ -94,19 +111,23 @@ export default function Session() {
     }
   };
 
-  const loadNextQuestion = async (currentSessionId: string) => {
+  const loadNextQuestion = async (currentSessionId: string, game?: any) => {
     setLoading(true);
     setShowResult(false);
     setSelectedAnswer(null);
     setShowHint(false);
     setQuestionStartTime(Date.now());
 
+    const gameToUse = game || gameData;
+    if (!gameToUse || !difficulty) return;
+
     try {
       const { data, error } = await supabase.functions.invoke('generate-question', {
         body: {
-          subject,
-          grade: 11,
-          sessionId: currentSessionId,
+          chapter: gameToUse.chapter,
+          gameTitle: gameToUse.title,
+          gameConcept: gameToUse.concept,
+          difficulty: difficulty,
         },
       });
 
@@ -125,34 +146,19 @@ export default function Session() {
   };
 
   const handleSubmit = async () => {
-    if (selectedAnswer === null || !currentQuestion || !sessionId) return;
+    if (selectedAnswer === null || !currentQuestion || !sessionId || !gameId || !difficulty) return;
 
     setSubmitting(true);
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-    const responseTime = Date.now() - questionStartTime;
 
     try {
-      const { error } = await supabase.functions.invoke('submit-result', {
-        body: {
-          sessionId,
-          taskId: currentQuestion.id,
-          correct: isCorrect,
-          responseTimeMs: responseTime,
-          hintsUsed: showHint ? 1 : 0,
-          subject,
-          topic: currentQuestion.topic,
-          difficulty: currentQuestion.difficulty,
-        },
-      });
+      const newStats = {
+        correct: stats.correct + (isCorrect ? 1 : 0),
+        total: stats.total + 1,
+        hintsUsed: stats.hintsUsed + (showHint ? 1 : 0),
+      };
 
-      if (error) throw error;
-
-      setStats((prev) => ({
-        correct: prev.correct + (isCorrect ? 1 : 0),
-        total: prev.total + 1,
-        hintsUsed: prev.hintsUsed + (showHint ? 1 : 0),
-      }));
-
+      setStats(newStats);
       setShowResult(true);
 
       if (isCorrect) {
@@ -160,10 +166,11 @@ export default function Session() {
         setTimeout(() => setShowConfetti(false), 3000);
       }
 
-      // Check if session time is up
-      if (progress >= 100) {
-        setTimeout(() => endSession(), 3000);
-      }
+      // Calculate stars and accuracy for this question
+      const accuracy = (newStats.correct / newStats.total) * 100;
+      const starsEarned = accuracy >= 90 ? 3 : accuracy >= 70 ? 2 : 1;
+
+      // Update game progress (will be called at end of session with full stats)
     } catch (error: any) {
       toast({
         title: 'Failed to submit answer',
@@ -184,44 +191,21 @@ export default function Session() {
   const handleSkip = async () => {
     if (!currentQuestion || !sessionId) return;
 
-    const responseTime = Date.now() - questionStartTime;
+    setStats((prev) => ({
+      ...prev,
+      total: prev.total + 1,
+      hintsUsed: prev.hintsUsed + (showHint ? 1 : 0),
+    }));
 
-    try {
-      await supabase.functions.invoke('submit-result', {
-        body: {
-          sessionId,
-          taskId: currentQuestion.id,
-          correct: false,
-          responseTimeMs: responseTime,
-          hintsUsed: showHint ? 1 : 0,
-          subject,
-          topic: currentQuestion.topic,
-          difficulty: currentQuestion.difficulty,
-          skipped: true,
-        },
-      });
-
-      setStats((prev) => ({
-        ...prev,
-        total: prev.total + 1,
-        hintsUsed: prev.hintsUsed + (showHint ? 1 : 0),
-      }));
-
-      handleNext();
-    } catch (error: any) {
-      toast({
-        title: 'Failed to skip question',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+    handleNext();
   };
 
   const endSession = async () => {
-    if (!sessionId) return;
+    if (!sessionId || !gameId || !difficulty) return;
 
     try {
-      const { error } = await supabase
+      // Update session
+      const { error: sessionError } = await supabase
         .from('sessions')
         .update({
           end_time: new Date().toISOString(),
@@ -229,12 +213,31 @@ export default function Session() {
         })
         .eq('id', sessionId);
 
-      if (error) throw error;
+      if (sessionError) throw sessionError;
+
+      // Update game progress
+      const accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+      const starsEarned = accuracy >= 90 ? 3 : accuracy >= 70 ? 2 : accuracy >= 50 ? 1 : 0;
+      const completed = stats.total >= 5 && accuracy >= 50;
+
+      const { error: progressError } = await supabase.functions.invoke('update-game-progress', {
+        body: {
+          gameId,
+          difficulty,
+          starsEarned,
+          accuracy: Math.round(accuracy),
+          questionsCompleted: stats.total,
+          hintsUsed: stats.hintsUsed,
+          completed,
+        },
+      });
+
+      if (progressError) throw progressError;
 
       navigate('/dashboard');
       toast({
         title: 'Session complete!',
-        description: `You answered ${stats.correct} out of ${stats.total} questions correctly.`,
+        description: `You answered ${stats.correct} out of ${stats.total} questions correctly (${Math.round(accuracy)}%). Earned ${starsEarned} stars!`,
       });
     } catch (error: any) {
       toast({
@@ -265,21 +268,16 @@ export default function Session() {
                 <Brain className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-foreground">{subject}</h1>
+                <h1 className="text-lg font-bold text-foreground">
+                  {gameData?.title || 'Loading...'}
+                </h1>
                 <p className="text-xs text-muted-foreground">
-                  {stats.correct}/{stats.total} correct
+                  {stats.correct}/{stats.total} correct • {difficulty}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <AnimatedCounter
-                  value={Math.floor((sessionTimeMs - elapsedTime) / 1000)}
-                />
-                <span>s</span>
-              </div>
               <EnhancedButton variant="ghost" size="sm" onClick={endSession}>
                 End Session
               </EnhancedButton>
@@ -287,7 +285,7 @@ export default function Session() {
           </div>
 
           <div className="container mx-auto px-4">
-            <Progress value={progress} className="h-1" />
+            <Progress value={(stats.total / 10) * 100} className="h-1" />
           </div>
         </motion.header>
 
