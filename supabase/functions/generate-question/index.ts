@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
   try {
     const request: QuestionRequest = await req.json();
     
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable API key not configured');
     }
 
     // Map difficulty to detailed level description
@@ -68,31 +68,32 @@ Make the question:
 The correctAnswer should be the index (0-3) of the correct option.
 Options should be distinct and plausible to test understanding.`;
 
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Generate question ${request.questionNumber || 1} for this game level. Make it engaging and contextually relevant to the game theme.` }
+          { role: 'user', content: `Generate question ${request.questionNumber || 1} for this game level. Make it engaging and contextually relevant to the game theme. Return ONLY valid JSON.` }
         ],
         temperature: 0.8,
-        response_format: { type: "json_object" }
       }),
     });
 
-    if (!openAIResponse.ok) {
-      const errorText = await openAIResponse.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('Lovable AI API error:', errorText);
+      throw new Error(`Lovable AI API error: ${aiResponse.status}`);
     }
 
-    const openAIData = await openAIResponse.json();
-    let generatedContent = openAIData.choices[0].message.content;
+    const aiData = await aiResponse.json();
+    let generatedContent = aiData.choices[0].message.content;
+    
+    console.log('Raw AI response:', generatedContent);
     
     // Clean up the response - remove markdown code blocks if present
     generatedContent = generatedContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -102,8 +103,13 @@ Options should be distinct and plausible to test understanding.`;
     try {
       question = JSON.parse(generatedContent);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', generatedContent);
+      console.error('Failed to parse AI response:', generatedContent);
       throw new Error('Invalid JSON response from AI');
+    }
+
+    // Ensure all required fields are present
+    if (!question.options || !Array.isArray(question.options)) {
+      throw new Error('Invalid question format: options must be an array');
     }
 
     return new Response(JSON.stringify(question), {

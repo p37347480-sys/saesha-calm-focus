@@ -133,11 +133,16 @@ export default function Session() {
 
       if (error) throw error;
 
+      if (!data || !data.options) {
+        throw new Error('Invalid question data received');
+      }
+
       setCurrentQuestion(data);
     } catch (error: any) {
+      console.error('Failed to load question:', error);
       toast({
         title: 'Failed to load question',
-        description: error.message,
+        description: error.message || 'Please try again',
         variant: 'destructive',
       });
     } finally {
@@ -328,7 +333,7 @@ export default function Session() {
 
                   {/* Options */}
                   <div className="mb-6 space-y-3">
-                    {currentQuestion.options.map((option, index) => {
+                    {currentQuestion?.options?.map((option, index) => {
                       const isSelected = selectedAnswer === index;
                       const isCorrect = index === currentQuestion.correctAnswer;
                       const showCorrectness = showResult;
