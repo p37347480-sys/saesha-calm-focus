@@ -349,6 +349,10 @@ export type Database = {
         Args: { p_is_correct: boolean; p_session_id: string }
         Returns: undefined
       }
+      unlock_first_games_for_user: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

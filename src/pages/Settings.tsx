@@ -10,6 +10,7 @@ import {
   User,
   Bell,
   LogOut,
+  Palette,
 } from 'lucide-react';
 import { EnhancedButton } from '@/components/ui/enhanced-button';
 import { useNavigate } from 'react-router-dom';
@@ -20,12 +21,14 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme, themes } from '@/contexts/ThemeContext';
 
 export default function Settings() {
   const navigate = useNavigate();
   const { settings, updateSettings } = useAppStore();
   const { signOut, user } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme, isDark, toggleDark } = useTheme();
 
   const fontSizes = [
     { value: 'small' as const, label: 'Small', className: 'text-sm' },
@@ -73,6 +76,84 @@ export default function Settings() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-2xl space-y-6">
+          {/* Theme & Appearance */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <Card className="border-border/50 bg-gradient-card p-6">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="rounded-lg bg-gradient-calm p-2">
+                  <Palette className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  Theme & Appearance
+                </h2>
+              </div>
+
+              <div className="space-y-6">
+                {/* Dark Mode */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="dark-mode" className="text-base">
+                      Dark mode
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Switch between light and dark theme
+                    </p>
+                  </div>
+                  <Switch
+                    id="dark-mode"
+                    checked={isDark}
+                    onCheckedChange={toggleDark}
+                  />
+                </div>
+
+                {/* Color Theme Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base">Color theme</Label>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {(Object.keys(themes) as Array<keyof typeof themes>).map((themeKey) => {
+                      const themeData = themes[themeKey];
+                      const colors = themeData[isDark ? 'dark' : 'light'];
+                      return (
+                        <button
+                          key={themeKey}
+                          onClick={() => setTheme(themeKey)}
+                          className={cn(
+                            'group relative overflow-hidden rounded-xl border-2 p-4 text-center transition-all',
+                            theme === themeKey
+                              ? 'border-primary bg-gradient-calm ring-2 ring-primary/20'
+                              : 'border-border hover:border-primary/50 hover:bg-muted'
+                          )}
+                        >
+                          <div className="mb-2 flex justify-center gap-1">
+                            <div
+                              className="h-6 w-6 rounded-full"
+                              style={{ backgroundColor: `hsl(${colors.primary})` }}
+                            />
+                            <div
+                              className="h-6 w-6 rounded-full"
+                              style={{ backgroundColor: `hsl(${colors.secondary})` }}
+                            />
+                            <div
+                              className="h-6 w-6 rounded-full"
+                              style={{ backgroundColor: `hsl(${colors.accent})` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {themeData.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
           {/* Accessibility */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
