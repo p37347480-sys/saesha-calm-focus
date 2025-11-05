@@ -302,7 +302,7 @@ export default function Settings() {
                     Grade
                   </p>
                   <p className="text-lg font-semibold text-foreground">
-                    Grade {settings.grade}
+                    {settings.grade ? `Grade ${settings.grade}` : 'Not set'}
                   </p>
                 </div>
 
@@ -311,7 +311,7 @@ export default function Settings() {
                     Favorite Chapters
                   </p>
                   <p className="text-lg font-semibold text-foreground">
-                    {settings.favoriteChapters.length > 0 
+                    {settings.favoriteChapters && settings.favoriteChapters.length > 0 
                       ? settings.favoriteChapters.join(', ') 
                       : 'None selected'}
                   </p>
