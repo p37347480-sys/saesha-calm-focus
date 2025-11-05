@@ -41,11 +41,28 @@ Deno.serve(async (req) => {
     
     const game: GameData = games[0];
     
-    const systemPrompt = `You are an educational mathematics content generator for Class 11-12 students (Indian CBSE curriculum).
+    const generatedQuestions = [];
+    
+    // Generate questions
+    for (let i = 0; i < count; i++) {
+      const systemPrompt = `You are an educational mathematics content generator for Class 11-12 students (Indian CBSE curriculum).
 
-Generate a mathematics question for the game "${game.game_title}" which focuses on "${game.game_concept}" within the chapter "${game.chapter}".
+Generate a UNIQUE, THEME-SPECIFIC mathematics question for the game "${game.game_title}" which focuses EXCLUSIVELY on "${game.game_concept}" within the chapter "${game.chapter}".
+
+🎯 CRITICAL INSTRUCTIONS FOR UNIQUENESS:
+1. This is question ${i + 1} for THIS SPECIFIC GAME - make it completely unique to this game's theme
+2. The question MUST be contextually tied to "${game.game_title}" - use its specific scenario/setting
+3. DO NOT create generic trigonometry questions - make them specific to the game's concept
+4. Use the game's unique context in the word problem (e.g., if it's about heights, use buildings/towers; if it's about waves, use ocean/sound waves)
+5. Each question should feel like it belongs ONLY to this game, not to any other game
 
 Difficulty: ${difficulty}
+
+THEME-SPECIFIC EXAMPLES:
+- "Skyline Surveyor" → Questions about measuring building heights, distances between structures, shadow calculations
+- "Wave Lab" → Questions about amplitude, frequency, phase shifts, wave transformations, graph analysis
+- "Mountain Rescue Drone" → Questions about 3D angles of elevation/depression, drone positioning, terrain mapping
+- "Clock Tower Challenge" → Questions about clock hands, time-based angles, tower shadows at different times
 
 CRITICAL FORMATTING RULES:
 1. Return ONLY valid JSON, no markdown code blocks
@@ -53,22 +70,19 @@ CRITICAL FORMATTING RULES:
 3. For LaTeX in JSON: use \\\\frac not \\frac, \\\\sin not \\sin, \\\\sqrt not \\sqrt, etc.
 4. Do not include any text before or after the JSON object
 5. Use inline LaTeX notation within dollar signs: $x^2$, $\\\\frac{1}{2}$, $\\\\sin \\\\theta$
-6. Keep the narrative simple and engaging
+6. Keep the narrative engaging and specific to the game's theme
+7. Make the question feel like it's part of the game's unique storyline
 
 Return JSON with this structure:
 {
-  "question": "Clear question with $LaTeX$ for math",
+  "question": "Clear, theme-specific question with $LaTeX$ for math - must reference the game's unique context",
   "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
   "correctAnswer": 0,
-  "explanation": "Step-by-step explanation with $LaTeX$",
-  "hint": "Helpful hint with $LaTeX$",
+  "explanation": "Step-by-step explanation with $LaTeX$ that relates to the game's theme",
+  "hint": "Helpful hint with $LaTeX$ that guides within the game's context",
   "topic": "${game.game_concept}"
 }`;
-
-    const generatedQuestions = [];
     
-    // Generate questions
-    for (let i = 0; i < count; i++) {
       const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -79,7 +93,7 @@ Return JSON with this structure:
           model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Generate unique question ${i + 1}. Return ONLY valid JSON.` }
+            { role: 'user', content: `Generate a completely unique, theme-specific question ${i + 1} for "${game.game_title}". Make sure it's contextually tied to the game's concept and feels different from any other game. Return ONLY valid JSON with properly escaped LaTeX (use \\\\ before all LaTeX commands).` }
           ],
           temperature: 0.8,
         }),
