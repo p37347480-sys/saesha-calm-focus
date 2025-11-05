@@ -13,6 +13,7 @@ import Session from "./pages/Session";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import SeedQuestions from "./pages/SeedQuestions";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/seed-questions"
+              element={
+                <ProtectedRoute>
+                  <SeedQuestions />
                 </ProtectedRoute>
               }
             />

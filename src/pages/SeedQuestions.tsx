@@ -46,7 +46,7 @@ export default function SeedQuestions() {
               .eq('game_id', game.id)
               .eq('difficulty', difficulty);
 
-            if (existing && existing.length >= 10) {
+            if (existing && existing.length >= 20) {
               console.log(`Skipping ${game.game_title} (${difficulty}) - already has questions`);
               continue;
             }
@@ -56,7 +56,7 @@ export default function SeedQuestions() {
               body: {
                 gameId: game.id,
                 difficulty: difficulty,
-                count: 10,
+                count: 20,
               },
             });
 
@@ -124,8 +124,8 @@ export default function SeedQuestions() {
             <div className="text-sm text-muted-foreground space-y-2">
               <p>This will:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Generate 10 questions per game per difficulty level</li>
-                <li>Skip games that already have 10+ questions</li>
+                <li>Generate 20 questions per game per difficulty level</li>
+                <li>Skip games that already have 20+ questions</li>
                 <li>Use AI to create contextually relevant questions</li>
                 <li>Store all questions in the database for instant access</li>
               </ul>

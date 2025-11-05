@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { gameId, difficulty, count = 10 } = await req.json();
+    const { gameId, difficulty, count = 20 } = await req.json();
     
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
