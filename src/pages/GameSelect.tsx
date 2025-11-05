@@ -77,8 +77,8 @@ export default function GameSelect() {
   };
 
   const isLevelUnlocked = (game: Game, difficulty: 'easy' | 'medium' | 'hard') => {
-    // Easy is always unlocked for first game
-    if (difficulty === 'easy' && game.game_number === 1) return true;
+    // Easy is always unlocked for ALL games
+    if (difficulty === 'easy') return true;
     
     const progress = game.progress[difficulty];
     return progress?.unlocked || false;
