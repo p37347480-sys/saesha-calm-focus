@@ -149,20 +149,20 @@ export default function GameSelect() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all">
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 border-b">
-                  <div className="flex items-start justify-between mb-2">
+              <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all card-interactive">
+                <div className="bg-gradient-hero p-6 border-b">
+                  <div className="flex items-start justify-between mb-3">
                     <div>
-                      <div className="text-sm text-muted-foreground mb-1">
+                      <div className="text-sm text-primary-foreground/80 mb-1 font-medium">
                         Game {game.game_number}
                       </div>
-                      <h3 className="text-2xl font-bold">{game.game_title}</h3>
+                      <h3 className="text-2xl font-bold text-primary-foreground">{game.game_title}</h3>
                     </div>
-                    <div className="bg-background rounded-full p-2">
-                      <Trophy className="w-6 h-6 text-primary" />
+                    <div className="bg-background/20 backdrop-blur rounded-full p-3">
+                      <Trophy className="w-6 h-6 text-primary-foreground" />
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{game.game_concept}</p>
+                  <p className="text-sm text-primary-foreground/90 leading-relaxed">{game.game_concept}</p>
                 </div>
 
                 <CardContent className="p-6">
@@ -177,20 +177,22 @@ export default function GameSelect() {
                         <Button
                           key={difficulty}
                           variant="outline"
-                          className={`w-full h-auto p-4 justify-between ${
-                            unlocked ? 'hover:bg-primary/5' : 'opacity-60 cursor-not-allowed'
+                          className={`w-full h-auto p-4 justify-between border-2 transition-all ${
+                            unlocked 
+                              ? 'hover:bg-primary/10 hover:border-primary hover:scale-[1.02]' 
+                              : 'opacity-50 cursor-not-allowed'
                           }`}
                           onClick={() => startGame(game, difficulty)}
                           disabled={!unlocked}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg border ${getDifficultyColor(difficulty)}`}>
-                              <DifficultyIcon className="w-4 h-4" />
+                            <div className={`p-2 rounded-lg border-2 ${getDifficultyColor(difficulty)}`}>
+                              <DifficultyIcon className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                              <div className="font-semibold capitalize">{difficulty}</div>
+                              <div className="font-bold capitalize text-base">{difficulty}</div>
                               {stars > 0 && (
-                                <div className="text-xs text-muted-foreground">
+                                <div className="text-xs text-muted-foreground font-medium">
                                   {accuracy}% accuracy
                                 </div>
                               )}
@@ -203,16 +205,16 @@ export default function GameSelect() {
                                 {[1, 2, 3].map((n) => (
                                   <Star
                                     key={n}
-                                    className={`w-4 h-4 ${
+                                    className={`w-5 h-5 transition-all ${
                                       n <= stars
-                                        ? 'text-yellow-500 fill-yellow-500'
+                                        ? 'text-yellow-500 fill-yellow-500 scale-110'
                                         : 'text-gray-300'
                                     }`}
                                   />
                                 ))}
                               </>
                             ) : (
-                              <Lock className="w-4 h-4 text-muted-foreground" />
+                              <Lock className="w-5 h-5 text-muted-foreground" />
                             )}
                           </div>
                         </Button>

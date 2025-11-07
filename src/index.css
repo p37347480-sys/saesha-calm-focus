@@ -150,11 +150,51 @@ All colors MUST be HSL.
     font-feature-settings: "kern" 1;
   }
 
+  /* ADHD-Friendly Focus States - High Visibility */
+  *:focus-visible {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 3px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+  }
+
+  /* Enhanced button focus */
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid hsl(var(--primary));
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.3);
+    transform: scale(1.02);
+  }
+
   /* Dyslexia-friendly font option */
   .font-dyslexia {
     font-family: 'Comic Sans MS', 'OpenDyslexic', sans-serif;
     letter-spacing: 0.05em;
     word-spacing: 0.15em;
+  }
+
+  /* Card hover effects for clear feedback */
+  .card-interactive {
+    transition: var(--transition-smooth);
+    cursor: pointer;
+  }
+  
+  .card-interactive:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  /* Progress indicator styling */
+  .progress-chunked {
+    background: repeating-linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.1),
+      hsl(var(--primary) / 0.1) 10px,
+      transparent 10px,
+      transparent 20px
+    );
   }
 
   /* Reduced motion support */
@@ -184,6 +224,32 @@ All colors MUST be HSL.
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* ADHD-Friendly Visual Chunks */
+  .visual-chunk {
+    @apply p-4 rounded-lg border-2 border-border bg-card;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .visual-chunk:hover {
+    border-color: hsl(var(--primary) / 0.4);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Progress indicator */
+  .progress-step {
+    @apply flex items-center gap-2 p-3 rounded-lg bg-muted/50;
+  }
+
+  .progress-step.active {
+    @apply bg-primary/10 border-2 border-primary;
+  }
+
+  /* High contrast text for readability */
+  .text-high-contrast {
+    color: hsl(var(--foreground));
+    font-weight: 600;
   }
 }
 

@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { EnhancedQuestionCard } from '@/components/EnhancedQuestionCard';
+import { ProgressIndicator } from '@/components/ProgressIndicator';
 
 interface Question {
   id: string;
@@ -325,7 +326,13 @@ export default function Session() {
           </div>
 
           <div className="container mx-auto px-4">
-            <Progress value={(stats.total / 10) * 100} className="h-1" />
+            <div className="flex items-center justify-between mb-2">
+              <ProgressIndicator current={stats.total} total={10} />
+              <span className="text-sm font-medium text-muted-foreground">
+                {stats.total}/10 questions
+              </span>
+            </div>
+            <Progress value={(stats.total / 10) * 100} className="h-2" />
           </div>
         </motion.header>
 

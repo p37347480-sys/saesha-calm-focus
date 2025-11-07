@@ -115,7 +115,7 @@ export default function Home() {
               transition={{ delay: 0.5 }}
               className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl"
             >
-              Designed for Class 11-12 students with ADHD. Short, focused sessions
+              Designed for Class 9-10 students with ADHD. Short, focused sessions
               that adapt to your pace. Beautiful, calm interface that helps you stay
               in the zone.
             </motion.p>
@@ -160,7 +160,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className="mt-20 grid w-full max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-20 grid w-full max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-4"
           >
             {features.map((feature, index) => (
               <motion.div
@@ -172,19 +172,19 @@ export default function Home() {
                   scale: 1.05,
                   transition: { duration: 0.2 },
                 }}
-                className="group rounded-2xl border border-border/50 bg-card/80 p-6 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-md"
+                className="visual-chunk group"
               >
                 <motion.div
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
-                  className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-calm"
+                  className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-hero shadow-glow"
                 >
-                  <feature.icon className="h-6 w-6 text-primary" />
+                  <feature.icon className="h-7 w-7 text-primary-foreground" />
                 </motion.div>
-                <h3 className="mb-2 font-semibold text-foreground">
+                <h3 className="mb-2 text-lg font-bold text-foreground">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </motion.div>

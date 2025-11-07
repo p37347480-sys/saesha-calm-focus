@@ -163,16 +163,20 @@ export default function Dashboard() {
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
             <Card 
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary group"
+              className="card-interactive border-2 hover:border-primary/50 transition-all duration-300"
               onClick={navigateToChapters}
             >
               <CardContent className="p-8">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-4 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    <BookOpen className="w-8 h-8 text-primary" />
-                  </div>
+                  <motion.div 
+                    className="p-4 rounded-xl bg-gradient-hero shadow-glow"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <BookOpen className="w-8 h-8 text-primary-foreground" />
+                  </motion.div>
                   <div>
-                    <h3 className="text-2xl font-bold group-hover:text-primary transition-colors">
+                    <h3 className="text-2xl font-bold text-high-contrast">
                       Start Learning
                     </h3>
                     <p className="text-muted-foreground">
@@ -180,37 +184,37 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  5 chapters • 20 games • 3 difficulty levels each
+                <div className="text-sm text-muted-foreground font-medium">
+                  5 chapters • 20 games • 3 difficulty levels
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-2">
+            <Card className="border-2 border-border/50">
               <CardContent className="p-8">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-4 rounded-xl bg-secondary">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 rounded-xl bg-secondary/20">
                     <TrendingUp className="w-8 h-8 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">Your Stats</h3>
+                    <h3 className="text-2xl font-bold text-high-contrast">Your Stats</h3>
                     <p className="text-muted-foreground">
                       Track your progress
                     </p>
                   </div>
                 </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Levels Completed</span>
-                    <span className="font-semibold">{stats.completedLevels}</span>
+                <div className="space-y-3">
+                  <div className="visual-chunk flex justify-between">
+                    <span className="text-muted-foreground font-medium">Levels Completed</span>
+                    <span className="font-bold text-primary text-lg">{stats.completedLevels}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Tokens Earned</span>
-                    <span className="font-semibold">{stats.tokensEarned}</span>
+                  <div className="visual-chunk flex justify-between">
+                    <span className="text-muted-foreground font-medium">Tokens Earned</span>
+                    <span className="font-bold text-primary text-lg">{stats.tokensEarned}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Current Streak</span>
-                    <span className="font-semibold">{stats.streak} days</span>
+                  <div className="visual-chunk flex justify-between">
+                    <span className="text-muted-foreground font-medium">Current Streak</span>
+                    <span className="font-bold text-primary text-lg">{stats.streak} days</span>
                   </div>
                 </div>
               </CardContent>

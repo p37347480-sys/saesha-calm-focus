@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Grade = 11 | 12;
+export type Grade = 9 | 10;
 export type Chapter = 
   | 'Trigonometry' 
   | 'Algebra' 
