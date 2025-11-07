@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { EnhancedQuestionCard } from '@/components/EnhancedQuestionCard';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface Question {
   id: string;
@@ -42,6 +43,7 @@ export default function Session() {
   const { gameId, difficulty } = useParams<{ gameId: string; difficulty: 'easy' | 'medium' | 'hard' }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { play } = useSoundEffects();
 
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -204,6 +206,7 @@ export default function Session() {
 
       if (isCorrect) {
         setShowConfetti(true);
+        play('celebration');
         setTimeout(() => setShowConfetti(false), 3000);
       }
 
@@ -244,6 +247,8 @@ export default function Session() {
   const endSession = async () => {
     if (!sessionId || !gameId || !difficulty) return;
 
+    play('whoosh');
+
     try {
       // Update session
       const { error: sessionError } = await supabase
@@ -274,6 +279,10 @@ export default function Session() {
       });
 
       if (progressError) throw progressError;
+
+      if (completed) {
+        play('celebration');
+      }
 
       navigate('/dashboard');
       toast({

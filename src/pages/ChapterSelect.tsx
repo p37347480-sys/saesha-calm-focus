@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useUserStats } from '@/hooks/useUserStats';
 import { Progress } from '@/components/ui/progress';
+import { VolumeControl } from '@/components/VolumeControl';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 const chapters = [
   {
@@ -57,10 +59,16 @@ const chapters = [
 export default function ChapterSelect() {
   const navigate = useNavigate();
   const { stats } = useUserStats();
+  const { play } = useSoundEffects();
 
   const getChapterProgress = (chapterId: string) => {
     // Placeholder logic - would be replaced with actual chapter stats from backend
     return { progress: 0, stars: 0, completed: 0, total: 4 };
+  };
+
+  const handleChapterClick = (chapterId: string) => {
+    play('click');
+    navigate(`/games/${encodeURIComponent(chapterId)}`);
   };
 
   return (
@@ -118,7 +126,7 @@ export default function ChapterSelect() {
               >
                 <Card 
                   className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden border-2 hover:border-primary"
-                  onClick={() => navigate(`/games/${encodeURIComponent(chapter.id)}`)}
+                  onClick={() => handleChapterClick(chapter.id)}
                 >
                   <div className={`h-2 bg-gradient-to-r ${chapter.color}`} />
                   
@@ -179,6 +187,9 @@ export default function ChapterSelect() {
             );
           })}
         </div>
+
+        {/* Volume Control */}
+        <VolumeControl />
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, Lightbulb, Sparkles } from 'lucide-react';
 import { EnhancedButton } from './ui/enhanced-button';
 import { Card } from './ui/card';
 import { MathText } from './MathText';
 import { FloatingShapes } from './3d/FloatingShapes';
+import { GameVisualization } from './GameVisualizations';
+import { FeedbackAnimation } from './FeedbackAnimation';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface Question {
   id: string;
@@ -41,8 +44,55 @@ export function EnhancedQuestionCard({
   onSkip,
   submitting = false,
 }: EnhancedQuestionCardProps) {
+  const { play } = useSoundEffects();
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<'correct' | 'incorrect'>('correct');
+
+  // Handle answer submission feedback
+  useEffect(() => {
+    if (showResult && selectedAnswer !== null) {
+      const isCorrect = selectedAnswer === question.correctAnswer;
+      setFeedbackType(isCorrect ? 'correct' : 'incorrect');
+      setShowFeedback(true);
+      play(isCorrect ? 'correct' : 'incorrect');
+
+      setTimeout(() => setShowFeedback(false), 2000);
+    }
+  }, [showResult, selectedAnswer, question.correctAnswer, play]);
+
+  const handleAnswerClick = (index: number) => {
+    if (!showResult) {
+      play('click');
+      onSelectAnswer(index);
+    }
+  };
+
+  const handleHintClick = () => {
+    play('hint');
+    onToggleHint();
+  };
+
+  const handleSubmitClick = () => {
+    play('whoosh');
+    onSubmit();
+  };
+
   return (
     <div className="relative">
+      {/* Feedback Animation */}
+      <FeedbackAnimation
+        type={feedbackType}
+        show={showFeedback}
+        message={feedbackType === 'correct' ? 'Excellent!' : 'Try Again'}
+      />
+
+      {/* Game-specific visualization */}
+      <GameVisualization
+        gameTitle={question.topic || 'General'}
+        isCorrect={showResult && selectedAnswer === question.correctAnswer}
+        trigger={showResult}
+      />
+
       {/* 3D Background Animation */}
       <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl opacity-30">
         <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
@@ -94,7 +144,7 @@ export function EnhancedQuestionCard({
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: showResult ? 1 : 1.03, x: showResult ? 0 : 8 }}
                 whileTap={{ scale: showResult ? 1 : 0.97 }}
-                onClick={() => !showResult && onSelectAnswer(index)}
+                onClick={() => handleAnswerClick(index)}
                 disabled={showResult}
                 className={`w-full rounded-2xl border-3 p-6 text-left transition-all duration-200 ${
                   showCorrectness
@@ -185,7 +235,7 @@ export function EnhancedQuestionCard({
             <>
               <div className="flex gap-3">
                 {!showHint && question.hint && (
-                  <EnhancedButton variant="outline" size="lg" onClick={onToggleHint}>
+                  <EnhancedButton variant="outline" size="lg" onClick={handleHintClick}>
                     <Lightbulb className="mr-2 h-5 w-5" />
                     Hint
                   </EnhancedButton>
@@ -199,7 +249,7 @@ export function EnhancedQuestionCard({
               <EnhancedButton
                 variant="hero"
                 size="lg"
-                onClick={onSubmit}
+                onClick={handleSubmitClick}
                 disabled={selectedAnswer === null || submitting}
                 className="shadow-xl shadow-primary/40"
               >

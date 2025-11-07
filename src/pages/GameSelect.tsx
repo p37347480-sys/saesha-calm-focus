@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface Game {
   id: string;
@@ -33,6 +34,7 @@ interface Game {
 export default function GameSelect() {
   const { chapter } = useParams<{ chapter: string }>();
   const navigate = useNavigate();
+  const { play } = useSoundEffects();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -97,9 +99,11 @@ export default function GameSelect() {
   const startGame = (game: Game, difficulty: 'easy' | 'medium' | 'hard') => {
     if (!isLevelUnlocked(game, difficulty)) {
       toast.error('Complete previous levels to unlock this one!');
+      play('incorrect');
       return;
     }
     
+    play('whoosh');
     navigate(`/session/${game.id}/${difficulty}`);
   };
 
@@ -149,8 +153,17 @@ export default function GameSelect() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all card-interactive">
-                <div className="bg-gradient-hero p-6 border-b">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all card-interactive">
+                  <motion.div 
+                    className="bg-gradient-hero p-6 border-b"
+                    whileHover={{ 
+                      background: 'linear-gradient(135deg, hsl(262.1 83.3% 60%), hsl(160 45% 70%))',
+                    }}
+                  >
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="text-sm text-primary-foreground/80 mb-1 font-medium">
@@ -162,8 +175,8 @@ export default function GameSelect() {
                       <Trophy className="w-6 h-6 text-primary-foreground" />
                     </div>
                   </div>
-                  <p className="text-sm text-primary-foreground/90 leading-relaxed">{game.game_concept}</p>
-                </div>
+                    <p className="text-sm text-primary-foreground/90 leading-relaxed">{game.game_concept}</p>
+                  </motion.div>
 
                 <CardContent className="p-6">
                   <div className="space-y-3">
@@ -221,8 +234,9 @@ export default function GameSelect() {
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </motion.div>
           ))}
         </div>

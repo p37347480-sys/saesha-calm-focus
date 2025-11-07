@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useUserStats } from '@/hooks/useUserStats';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VolumeControl } from '@/components/VolumeControl';
 
 const StatCard = ({ icon, label, value, loading }: any) => (
   <div className="flex items-center gap-3">
@@ -221,6 +222,9 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         </main>
+
+        {/* Volume Control */}
+        <VolumeControl />
       </div>
     </div>
   );
