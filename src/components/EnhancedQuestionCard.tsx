@@ -31,6 +31,7 @@ interface EnhancedQuestionCardProps {
   onSubmit: () => void;
   onSkip?: () => void;
   submitting?: boolean;
+  gameTitle?: string;
 }
 
 export function EnhancedQuestionCard({
@@ -43,6 +44,7 @@ export function EnhancedQuestionCard({
   onSubmit,
   onSkip,
   submitting = false,
+  gameTitle,
 }: EnhancedQuestionCardProps) {
   const { play } = useSoundEffects();
   const [showFeedback, setShowFeedback] = useState(false);
@@ -88,7 +90,7 @@ export function EnhancedQuestionCard({
 
       {/* Game-specific visualization */}
       <GameVisualization
-        gameTitle={question.topic || 'General'}
+        gameTitle={gameTitle || question.topic || 'General'}
         isCorrect={showResult && selectedAnswer === question.correctAnswer}
         trigger={showResult}
       />

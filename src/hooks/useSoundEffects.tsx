@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Howl } from 'howler';
 import { useAppStore } from '@/store/useAppStore';
 
-type SoundType = 'correct' | 'incorrect' | 'click' | 'whoosh' | 'celebration' | 'hint';
+type SoundType = 'correct' | 'incorrect' | 'click' | 'whoosh' | 'celebration' | 'hint' | 'tick' | 'unlock';
 
 export function useSoundEffects() {
   const { settings } = useAppStore();
@@ -13,36 +13,44 @@ export function useSoundEffects() {
     whoosh: null,
     celebration: null,
     hint: null,
+    tick: null,
+    unlock: null,
   });
 
   useEffect(() => {
     // Generate sounds using Web Audio API (frequency-based)
-    const createTone = (frequency: number, duration: number, type: OscillatorType = 'sine') => {
+    const createTone = (frequency: number, duration: number, type: OscillatorType = 'sine', fadeType: 'gentle' | 'sharp' = 'gentle') => {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
       return new Howl({
-        src: [createToneDataUrl(audioContext, frequency, duration, type)],
+        src: [createToneDataUrl(audioContext, frequency, duration, type, fadeType)],
         volume: settings.soundEnabled ? 0.3 : 0,
       });
     };
 
-    // Correct answer - pleasant ascending tones
-    soundsRef.current.correct = createTone(523.25, 0.15); // C5
+    // Correct answer - pleasant ascending chord
+    soundsRef.current.correct = createTone(523.25, 0.2); // C5
     
     // Incorrect - gentle descending tone
-    soundsRef.current.incorrect = createTone(220, 0.2);
+    soundsRef.current.incorrect = createTone(220, 0.25);
     
     // Click - short tick
-    soundsRef.current.click = createTone(880, 0.05, 'square');
+    soundsRef.current.click = createTone(880, 0.05, 'square', 'sharp');
     
     // Whoosh - sweep
-    soundsRef.current.whoosh = createTone(300, 0.1);
+    soundsRef.current.whoosh = createTone(300, 0.15);
     
-    // Celebration - chord
-    soundsRef.current.celebration = createTone(659.25, 0.3); // E5
+    // Celebration - triumphant chord
+    soundsRef.current.celebration = createTone(659.25, 0.4); // E5
     
     // Hint - soft notification
     soundsRef.current.hint = createTone(440, 0.15, 'triangle');
+
+    // Tick - clock sound
+    soundsRef.current.tick = createTone(800, 0.03, 'square', 'sharp');
+
+    // Unlock - success chime
+    soundsRef.current.unlock = createTone(784, 0.25, 'sine');
 
     return () => {
       Object.values(soundsRef.current).forEach(sound => sound?.unload());
@@ -53,7 +61,8 @@ export function useSoundEffects() {
     context: AudioContext, 
     frequency: number, 
     duration: number,
-    type: OscillatorType
+    type: OscillatorType,
+    fadeType: 'gentle' | 'sharp' = 'gentle'
   ): string => {
     const sampleRate = context.sampleRate;
     const numSamples = Math.floor(sampleRate * duration);
@@ -62,7 +71,9 @@ export function useSoundEffects() {
 
     for (let i = 0; i < numSamples; i++) {
       const t = i / sampleRate;
-      const fadeOut = 1 - (i / numSamples) * 0.5; // Gentle fade
+      const fadeOut = fadeType === 'sharp' 
+        ? (1 - (i / numSamples))
+        : (1 - (i / numSamples) * 0.5); // Gentle fade
       
       if (type === 'sine') {
         data[i] = Math.sin(2 * Math.PI * frequency * t) * fadeOut;
@@ -136,10 +147,14 @@ export function useSoundEffects() {
     }
 
     // Haptic feedback for mobile
-    if ('vibrate' in navigator && sound === 'correct') {
-      navigator.vibrate(50);
-    } else if ('vibrate' in navigator && sound === 'incorrect') {
-      navigator.vibrate([30, 50, 30]);
+    if ('vibrate' in navigator) {
+      if (sound === 'correct' || sound === 'celebration') {
+        navigator.vibrate(50);
+      } else if (sound === 'incorrect') {
+        navigator.vibrate([30, 50, 30]);
+      } else if (sound === 'click' || sound === 'tick') {
+        navigator.vibrate(10);
+      }
     }
   };
 

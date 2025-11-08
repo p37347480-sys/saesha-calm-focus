@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ConfettiCelebration } from '@/components/ConfettiCelebration';
 import { EnhancedQuestionCard } from '@/components/EnhancedQuestionCard';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
+import { BackgroundAnimation } from '@/components/GameVisualizations';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface Question {
@@ -304,6 +305,9 @@ export default function Session() {
     <div className="relative min-h-screen w-full overflow-hidden">
       <CalmWorld />
       {showConfetti && <ConfettiCelebration trigger={showConfetti} />}
+      
+      {/* Game-specific background animation */}
+      {gameData?.title && <BackgroundAnimation gameTitle={gameData.title} />}
 
       <div className="relative z-10 min-h-screen">
         {/* Header */}
@@ -376,6 +380,7 @@ export default function Session() {
                   onSubmit={handleSubmit}
                   onSkip={handleSkip}
                   submitting={submitting}
+                  gameTitle={gameData?.title || ''}
                 />
                 
                 {showResult && (
