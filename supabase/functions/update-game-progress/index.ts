@@ -74,10 +74,13 @@ Deno.serve(async (req) => {
 
     console.log('update-game-progress: Upserting progress data:', progressData);
 
-    // Upsert progress
+    // Upsert progress - specify conflict resolution columns
     const { data: updatedProgress, error: upsertError } = await supabase
       .from('game_progress')
-      .upsert(progressData)
+      .upsert(progressData, {
+        onConflict: 'user_id,game_id,difficulty',
+        ignoreDuplicates: false
+      })
       .select()
       .single();
 
