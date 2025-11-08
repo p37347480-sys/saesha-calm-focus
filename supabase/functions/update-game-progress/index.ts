@@ -21,8 +21,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('update-game-progress: Function invoked');
+    
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('update-game-progress: No authorization header');
       throw new Error('No authorization header');
     }
 
@@ -34,10 +37,12 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('update-game-progress: Auth error:', authError);
       throw new Error('Unauthorized');
     }
 
     const update: ProgressUpdate = await req.json();
+    console.log('update-game-progress: Received update:', update);
 
     // Get existing progress or create new
     const { data: existingProgress, error: fetchError } = await supabase
@@ -48,7 +53,12 @@ Deno.serve(async (req) => {
       .eq('difficulty', update.difficulty)
       .maybeSingle();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('update-game-progress: Fetch error:', fetchError);
+      throw fetchError;
+    }
+
+    console.log('update-game-progress: Existing progress:', existingProgress);
 
     const progressData = {
       user_id: user.id,
@@ -62,6 +72,8 @@ Deno.serve(async (req) => {
       completed_at: update.completed ? new Date().toISOString() : existingProgress?.completed_at,
     };
 
+    console.log('update-game-progress: Upserting progress data:', progressData);
+
     // Upsert progress
     const { data: updatedProgress, error: upsertError } = await supabase
       .from('game_progress')
@@ -69,13 +81,19 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    if (upsertError) throw upsertError;
+    if (upsertError) {
+      console.error('update-game-progress: Upsert error:', upsertError);
+      throw upsertError;
+    }
+
+    console.log('update-game-progress: Progress updated successfully');
 
     // Award rewards for milestones
     const rewards = [];
     
     // First time completing a level
     if (update.completed && !existingProgress?.completed_at) {
+      console.log('update-game-progress: Level completion reward');
       rewards.push({
         user_id: user.id,
         reward_type: 'level_completion',
@@ -85,8 +103,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Perfect accuracy (100%)
-    if (update.accuracy >= 1.0 && update.completed) {
+    // Perfect accuracy (100%) - accuracy is passed as 0-100, not 0-1
+    if (update.accuracy >= 100 && update.completed) {
+      console.log('update-game-progress: Perfect score reward');
       rewards.push({
         user_id: user.id,
         reward_type: 'perfect_score',
@@ -98,6 +117,7 @@ Deno.serve(async (req) => {
 
     // 3 stars achievement
     if (update.starsEarned === 3 && (existingProgress?.stars_earned || 0) < 3) {
+      console.log('update-game-progress: Three stars reward');
       rewards.push({
         user_id: user.id,
         reward_type: 'three_stars',
@@ -109,7 +129,12 @@ Deno.serve(async (req) => {
 
     // Insert rewards if any
     if (rewards.length > 0) {
-      await supabase.from('rewards').insert(rewards);
+      console.log('update-game-progress: Inserting rewards:', rewards);
+      const { error: rewardsError } = await supabase.from('rewards').insert(rewards);
+      if (rewardsError) {
+        console.error('update-game-progress: Rewards insert error:', rewardsError);
+        // Don't throw - rewards are nice-to-have
+      }
     }
 
     // Check if all games in chapter are completed
@@ -120,12 +145,14 @@ Deno.serve(async (req) => {
       .single();
 
     if (game) {
+      console.log('update-game-progress: Checking chapter completion for:', game.chapter);
+      
       const { data: chapterGames } = await supabase
         .from('games')
         .select('id')
         .eq('chapter', game.chapter);
 
-      if (chapterGames) {
+      if (chapterGames && chapterGames.length > 0) {
         const { data: chapterProgress } = await supabase
           .from('game_progress')
           .select('game_id, difficulty, completed_at')
@@ -137,33 +164,49 @@ Deno.serve(async (req) => {
           chapterProgress?.filter(p => p.completed_at).map(p => p.game_id) || []
         );
 
+        console.log('update-game-progress: Completed games count:', completedGames.size, 'of', chapterGames.length);
+
         if (completedGames.size === chapterGames.length) {
-          rewards.push({
+          console.log('update-game-progress: Chapter completed! Awarding chapter completion reward');
+          const chapterReward = {
             user_id: user.id,
             reward_type: 'chapter_completion',
             reward_title: `${game.chapter} Master! 🏆`,
             reward_description: `Completed all games in ${game.chapter}`,
             metadata: { chapter: game.chapter }
-          });
-          await supabase.from('rewards').insert(rewards[rewards.length - 1]);
+          };
+          
+          const { error: chapterRewardError } = await supabase.from('rewards').insert(chapterReward);
+          if (chapterRewardError) {
+            console.error('update-game-progress: Chapter reward insert error:', chapterRewardError);
+            // Don't throw - rewards are nice-to-have
+          }
         }
       }
     }
+
+    console.log('update-game-progress: Function completed successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
         progress: updatedProgress,
-        rewardsEarned: rewards,
+        rewardsEarned: rewards.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in update-game-progress:', error);
+    console.error('update-game-progress: Caught error:', error);
+    console.error('update-game-progress: Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
