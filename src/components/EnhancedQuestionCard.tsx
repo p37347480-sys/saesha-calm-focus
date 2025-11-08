@@ -99,7 +99,7 @@ export function EnhancedQuestionCard({
       <div className="absolute inset-0 -z-10 overflow-hidden rounded-2xl opacity-30">
         <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
           <Suspense fallback={null}>
-            <FloatingShapes />
+            <FloatingShapes gameTitle={gameTitle} topic={question.topic} />
           </Suspense>
         </Canvas>
       </div>

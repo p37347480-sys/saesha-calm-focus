@@ -2,6 +2,19 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
+import { SkylineSurveyor } from './SkylineSurveyor';
+import { WaveLab } from './WaveLab';
+import { MountainRescue } from './MountainRescue';
+import { ClockTower } from './ClockTower';
+import { AquaTank } from './AquaTank';
+import { ProbabilityCards } from './ProbabilityCards';
+import { FractionPizza } from './FractionPizza';
+import { AlgebraLock } from './AlgebraLock';
+
+interface FloatingShapesProps {
+  gameTitle?: string;
+  topic?: string;
+}
 
 function FloatingShape({ position, color, type }: { position: [number, number, number]; color: string; type: 'sphere' | 'box' | 'torus' }) {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -31,18 +44,60 @@ function FloatingShape({ position, color, type }: { position: [number, number, n
   );
 }
 
-export function FloatingShapes() {
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <pointLight position={[-10, -10, -5]} intensity={0.5} color="#b4a7d6" />
-      
-      <FloatingShape position={[-2, 1, -2]} color="#b4a7d6" type="sphere" />
-      <FloatingShape position={[2, -1, -2]} color="#a8d5ba" type="box" />
-      <FloatingShape position={[0, 2, -3]} color="#f5c4a8" type="torus" />
-      <FloatingShape position={[-3, -2, -1]} color="#f5b5c4" type="sphere" />
-      <FloatingShape position={[3, 1, -2]} color="#a8d5f5" type="box" />
-    </>
-  );
+export function FloatingShapes({ gameTitle, topic }: FloatingShapesProps) {
+  // Determine which themed 3D scene to render based on game title or topic
+  const renderThemedScene = () => {
+    const title = (gameTitle || topic || '').toLowerCase();
+    
+    // Trigonometry games
+    if (title.includes('skyline') || title.includes('surveyor')) {
+      return <SkylineSurveyor />;
+    }
+    if (title.includes('wave') || title.includes('lab') || title.includes('sine') || title.includes('cosine')) {
+      return <WaveLab />;
+    }
+    if (title.includes('mountain') || title.includes('rescue') || title.includes('drone') || title.includes('elevation')) {
+      return <MountainRescue />;
+    }
+    if (title.includes('clock') || title.includes('tower') || title.includes('time')) {
+      return <ClockTower />;
+    }
+    
+    // Algebra games
+    if (title.includes('lock') || title.includes('algebra') || title.includes('equation')) {
+      return <AlgebraLock />;
+    }
+    
+    // Volume & Area games
+    if (title.includes('aqua') || title.includes('tank') || title.includes('water') || title.includes('volume')) {
+      return <AquaTank />;
+    }
+    
+    // Probability games
+    if (title.includes('card') || title.includes('dice') || title.includes('probability') || title.includes('chance')) {
+      return <ProbabilityCards />;
+    }
+    
+    // Fractions games
+    if (title.includes('fraction') || title.includes('pizza') || title.includes('pie') || title.includes('decimal')) {
+      return <FractionPizza />;
+    }
+    
+    // Default generic floating shapes
+    return (
+      <>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <pointLight position={[-10, -10, -5]} intensity={0.5} color="#b4a7d6" />
+        
+        <FloatingShape position={[-2, 1, -2]} color="#b4a7d6" type="sphere" />
+        <FloatingShape position={[2, -1, -2]} color="#a8d5ba" type="box" />
+        <FloatingShape position={[0, 2, -3]} color="#f5c4a8" type="torus" />
+        <FloatingShape position={[-3, -2, -1]} color="#f5b5c4" type="sphere" />
+        <FloatingShape position={[3, 1, -2]} color="#a8d5f5" type="box" />
+      </>
+    );
+  };
+
+  return <>{renderThemedScene()}</>;
 }
