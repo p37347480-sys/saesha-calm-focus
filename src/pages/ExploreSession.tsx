@@ -13,6 +13,7 @@ import { SlopeCity } from '@/components/interactive/SlopeCity';
 import { ShapeFactory3D } from '@/components/interactive/ShapeFactory3D';
 import { PathFinder3D } from '@/components/interactive/PathFinder3D';
 import { ChanceArcade } from '@/components/interactive/ChanceArcade';
+import { FractionPizza } from '@/components/interactive/FractionPizza';
 import { BackgroundAnimation } from '@/components/GameVisualizations';
 
 interface GameData {
@@ -126,23 +127,39 @@ export default function ExploreSession() {
 
     const title = gameData.title.toLowerCase();
     const concept = gameData.concept.toLowerCase();
+    const chapter = gameData.chapter.toLowerCase();
 
+    // Algebra games
     if (title.includes('algebra') || concept.includes('expansion') || concept.includes('factoris')) {
       return <AlgebraPlayground3D />;
     }
-    if (title.includes('slope') || title.includes('linear') || concept.includes('graph')) {
+    
+    // Trigonometry games
+    if (title.includes('slope') || title.includes('linear') || concept.includes('graph') || chapter.includes('trigonometry')) {
       return <SlopeCity />;
     }
-    if (title.includes('volume') || title.includes('area') || title.includes('shape')) {
+    
+    // Volume & Surface Area games
+    if (title.includes('volume') || title.includes('area') || title.includes('shape') || title.includes('surface')) {
       return <ShapeFactory3D />;
     }
+    
+    // Pythagoras games
     if (title.includes('pythagoras') || title.includes('path') || concept.includes('triangle')) {
       return <PathFinder3D />;
     }
-    if (title.includes('probability') || title.includes('chance') || title.includes('dice')) {
+    
+    // Probability games
+    if (title.includes('probability') || title.includes('chance') || title.includes('dice') || chapter.includes('probability')) {
       return <ChanceArcade />;
     }
+    
+    // Fractions/Numbers games
+    if (title.includes('fraction') || title.includes('decimal') || title.includes('percentage') || title.includes('number') || chapter.includes('numbers')) {
+      return <FractionPizza />;
+    }
 
+    // Default fallback
     return <AlgebraPlayground3D />;
   };
 
