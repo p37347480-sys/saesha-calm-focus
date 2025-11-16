@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Canvas } from '@react-three/fiber';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,6 +19,11 @@ import { useUserStats } from '@/hooks/useUserStats';
 import { Progress } from '@/components/ui/progress';
 import { VolumeControl } from '@/components/VolumeControl';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { SkylineSurveyor } from '@/components/3d/SkylineSurveyor';
+import { AlgebraLock } from '@/components/3d/AlgebraLock';
+import { AquaTank } from '@/components/3d/AquaTank';
+import { ProbabilityCards } from '@/components/3d/ProbabilityCards';
+import { FractionPizza } from '@/components/3d/FractionPizza';
 
 const chapters = [
   {
@@ -25,6 +32,7 @@ const chapters = [
     icon: TrendingUp,
     description: 'Heights, distances, graphs & identities',
     color: 'from-blue-500 to-cyan-500',
+    animation: SkylineSurveyor,
   },
   {
     id: 'Algebra',
@@ -32,6 +40,7 @@ const chapters = [
     icon: Calculator,
     description: 'Expanding, factorising & equations',
     color: 'from-purple-500 to-pink-500',
+    animation: AlgebraLock,
   },
   {
     id: 'Volume & Surface Area',
@@ -39,6 +48,7 @@ const chapters = [
     icon: Box,
     description: 'Composite solids & optimization',
     color: 'from-green-500 to-emerald-500',
+    animation: AquaTank,
   },
   {
     id: 'Probability',
@@ -46,6 +56,7 @@ const chapters = [
     icon: Dices,
     description: 'Conditional, binomial & real-world data',
     color: 'from-orange-500 to-red-500',
+    animation: ProbabilityCards,
   },
   {
     id: 'Fractions/Decimals/Percentages/Interest',
@@ -53,6 +64,7 @@ const chapters = [
     icon: Percent,
     description: 'Fractions, decimals, percentages & interest',
     color: 'from-yellow-500 to-amber-500',
+    animation: FractionPizza,
   },
 ];
 
@@ -115,6 +127,7 @@ export default function ChapterSelect() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {chapters.map((chapter, index) => {
             const Icon = chapter.icon;
+            const AnimationComponent = chapter.animation;
             const progress = getChapterProgress(chapter.id);
 
             return (
@@ -125,12 +138,21 @@ export default function ChapterSelect() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card 
-                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden border-2 hover:border-primary"
+                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden border-2 hover:border-primary relative"
                   onClick={() => handleChapterClick(chapter.id)}
                 >
-                  <div className={`h-2 bg-gradient-to-r ${chapter.color}`} />
+                  {/* 3D Background Animation */}
+                  <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+                    <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+                      <Suspense fallback={null}>
+                        <AnimationComponent />
+                      </Suspense>
+                    </Canvas>
+                  </div>
+
+                  <div className={`h-2 bg-gradient-to-r ${chapter.color} relative z-10`} />
                   
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 relative z-10 bg-background/80 backdrop-blur-sm">
                     {/* Icon & Title */}
                     <div className="flex items-start justify-between mb-4">
                       <div className={`p-3 rounded-xl bg-gradient-to-br ${chapter.color} group-hover:scale-110 transition-transform`}>

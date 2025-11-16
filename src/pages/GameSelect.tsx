@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Canvas } from '@react-three/fiber';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { FloatingShapes } from '@/components/3d/FloatingShapes';
 
 interface Game {
   id: string;
@@ -157,9 +159,18 @@ export default function GameSelect() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all card-interactive">
+                <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all card-interactive relative">
+                  {/* 3D Background Animation */}
+                  <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
+                    <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+                      <Suspense fallback={null}>
+                        <FloatingShapes gameTitle={game.game_title} topic={game.game_concept} />
+                      </Suspense>
+                    </Canvas>
+                  </div>
+
                   <motion.div 
-                    className="bg-gradient-hero p-6 border-b"
+                    className="bg-gradient-hero p-6 border-b relative z-10"
                     whileHover={{ 
                       background: 'linear-gradient(135deg, hsl(262.1 83.3% 60%), hsl(160 45% 70%))',
                     }}
@@ -178,7 +189,7 @@ export default function GameSelect() {
                     <p className="text-sm text-primary-foreground/90 leading-relaxed">{game.game_concept}</p>
                   </motion.div>
 
-                <CardContent className="p-6">
+                <CardContent className="p-6 relative z-10 bg-background/90 backdrop-blur-sm">
                   <div className="space-y-3">
                     {(['easy', 'medium', 'hard'] as const).map((difficulty) => {
                       const unlocked = isLevelUnlocked(game, difficulty);
