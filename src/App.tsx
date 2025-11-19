@@ -9,7 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ChapterSelect from "./pages/ChapterSelect";
 import GameSelect from "./pages/GameSelect";
-import ExploreSession from "./pages/ExploreSession";
+import Session from "./pages/Session";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -71,7 +71,7 @@ const App = () => (
               path="/session/:gameId/:difficulty"
               element={
                 <ProtectedRoute>
-                  <ExploreSession />
+                  <Session />
                 </ProtectedRoute>
               }
             />
