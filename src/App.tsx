@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import ChapterSelect from "./pages/ChapterSelect";
 import GameSelect from "./pages/GameSelect";
 import Session from "./pages/Session";
+import VisualLearning from "./pages/VisualLearning";
 import Settings from "./pages/Settings";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -72,6 +73,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Session />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/learn/:gameId"
+              element={
+                <ProtectedRoute>
+                  <VisualLearning />
                 </ProtectedRoute>
               }
             />
