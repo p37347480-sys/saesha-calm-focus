@@ -2,10 +2,9 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
-import { SkylineSurveyor } from './SkylineSurveyor';
-import { WaveLab } from './WaveLab';
-import { MountainRescue } from './MountainRescue';
-import { ClockTower } from './ClockTower';
+import { MountainClimbExplorer } from './MountainClimbExplorer';
+import { LighthouseShadow } from './LighthouseShadow';
+import { TriangleConstructionLab } from './TriangleConstructionLab';
 import { AquaTank } from './AquaTank';
 import { ProbabilityCards } from './ProbabilityCards';
 import { FractionPizza } from './FractionPizza';
@@ -50,17 +49,14 @@ export function FloatingShapes({ gameTitle, topic }: FloatingShapesProps) {
     const title = (gameTitle || topic || '').toLowerCase();
     
     // Trigonometry games
-    if (title.includes('skyline') || title.includes('surveyor')) {
-      return <SkylineSurveyor />;
+    if (title.includes('mountain') || title.includes('climb') || title.includes('angle explorer')) {
+      return <MountainClimbExplorer />;
     }
-    if (title.includes('wave') || title.includes('lab') || title.includes('sine') || title.includes('cosine')) {
-      return <WaveLab />;
+    if (title.includes('lighthouse') || title.includes('shadow')) {
+      return <LighthouseShadow />;
     }
-    if (title.includes('mountain') || title.includes('rescue') || title.includes('drone') || title.includes('elevation')) {
-      return <MountainRescue />;
-    }
-    if (title.includes('clock') || title.includes('tower') || title.includes('time')) {
-      return <ClockTower />;
+    if (title.includes('triangle') || title.includes('construction') || title.includes('lab')) {
+      return <TriangleConstructionLab />;
     }
     
     // Algebra games
