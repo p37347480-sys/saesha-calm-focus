@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Zap } from 'lucide-react';
+import { ArrowLeft, Zap, Blocks, TreeDeciduous, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
@@ -22,6 +22,25 @@ interface Game {
     hard?: any;
   };
 }
+
+// Rich descriptions for each game
+const gameDescriptions: Record<string, { tagline: string; description: string; icon: any }> = {
+  'Algebra Block Builder': {
+    tagline: 'Build algebra visually with 3D blocks',
+    description: 'Drag terms together, watch areas form, and see expressions expand themselves naturally. Learn what "expanding brackets" really means through hands-on 3D construction.',
+    icon: Blocks
+  },
+  'Factor Forest Adventure': {
+    tagline: 'Shrink and split magical algebra trees',
+    description: 'Enter a magical forest where algebraic expressions grow like trees. Pull apart expressions and discover their hidden factor roots through deconstruction and animation.',
+    icon: TreeDeciduous
+  },
+  'Equation Balancer Arena': {
+    tagline: 'Use physics to solve equations',
+    description: 'Experience equality and balance in a futuristic physics arena. Drag weights between giant 3D scales to isolate x and feel what solving an equation really means.',
+    icon: Scale
+  }
+};
 
 export default function GameSelect() {
   const { chapter } = useParams<{ chapter: string }>();
@@ -91,8 +110,8 @@ export default function GameSelect() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
             {decodeURIComponent(chapter!)}
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Choose a game and select your difficulty level
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Choose a 3D learning experience — learn through animation and play, not questions
           </p>
         </motion.div>
 
@@ -112,32 +131,47 @@ export default function GameSelect() {
                 className="cursor-pointer"
               >
                 <Card className="overflow-hidden border-2 hover:border-primary/50 transition-all h-full">
-                  <div className="bg-gradient-hero p-6 min-h-[140px] flex flex-col justify-between">
+                  <div className="bg-gradient-hero p-6 min-h-[160px] flex flex-col justify-between">
                     <div>
-                      <div className="text-sm text-primary-foreground/80 mb-1 font-medium">
-                        Game {game.game_number}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-primary-foreground/80 font-medium">
+                          Game {game.game_number}
+                        </span>
+                        {gameDescriptions[game.game_title] && (
+                          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            {(() => {
+                              const IconComponent = gameDescriptions[game.game_title]?.icon;
+                              return IconComponent ? <IconComponent className="w-4 h-4 text-white" /> : null;
+                            })()}
+                          </div>
+                        )}
                       </div>
                       <h3 className="text-xl font-bold text-primary-foreground">
                         {game.game_title}
                       </h3>
+                      {gameDescriptions[game.game_title] && (
+                        <p className="text-sm text-primary-foreground/80 mt-1 font-medium">
+                          {gameDescriptions[game.game_title].tagline}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-3">
                       <Badge variant="secondary" className="bg-white/20 text-white border-0">
                         3D Visual
                       </Badge>
                       <Badge variant="secondary" className="bg-white/20 text-white border-0">
-                        Interactive
+                        No Questions
                       </Badge>
                     </div>
                   </div>
 
                   <CardContent className="p-5">
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                      {game.game_concept}
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {gameDescriptions[game.game_title]?.description || game.game_concept}
                     </p>
                     <Button className="w-full mt-4 gap-2" variant="default">
                       <Zap className="w-4 h-4" />
-                      Start Learning
+                      Start Exploring
                     </Button>
                   </CardContent>
                 </Card>
