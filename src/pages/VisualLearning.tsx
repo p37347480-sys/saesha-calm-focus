@@ -11,6 +11,9 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { MountainClimbExplorer } from '@/components/3d/MountainClimbExplorer';
 import { LighthouseShadow } from '@/components/3d/LighthouseShadow';
 import { TriangleConstructionLab } from '@/components/3d/TriangleConstructionLab';
+import { AlgebraBlockBuilder } from '@/components/3d/AlgebraBlockBuilder';
+import { FactorForest } from '@/components/3d/FactorForest';
+import { EquationBalancer } from '@/components/3d/EquationBalancer';
 
 interface GameData {
   id: string;
@@ -58,6 +61,7 @@ export default function VisualLearning() {
     if (!gameData) return null;
     const title = gameData.game_title.toLowerCase();
 
+    // Trigonometry games
     if (title.includes('mountain') || title.includes('climb')) {
       return <MountainClimbExplorer />;
     }
@@ -66,6 +70,17 @@ export default function VisualLearning() {
     }
     if (title.includes('triangle') || title.includes('construction')) {
       return <TriangleConstructionLab />;
+    }
+
+    // Algebra games
+    if (title.includes('block builder') || title.includes('expanding')) {
+      return <AlgebraBlockBuilder />;
+    }
+    if (title.includes('factor') || title.includes('forest')) {
+      return <FactorForest />;
+    }
+    if (title.includes('balancer') || title.includes('equation')) {
+      return <EquationBalancer />;
     }
 
     // Default fallback
