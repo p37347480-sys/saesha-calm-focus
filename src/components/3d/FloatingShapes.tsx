@@ -9,6 +9,9 @@ import { AquaTank } from './AquaTank';
 import { ProbabilityCards } from './ProbabilityCards';
 import { FractionPizza } from './FractionPizza';
 import { AlgebraLock } from './AlgebraLock';
+import { AlgebraBlockBuilder } from './AlgebraBlockBuilder';
+import { FactorForest } from './FactorForest';
+import { EquationBalancer } from './EquationBalancer';
 
 interface FloatingShapesProps {
   gameTitle?: string;
@@ -60,7 +63,16 @@ export function FloatingShapes({ gameTitle, topic }: FloatingShapesProps) {
     }
     
     // Algebra games
-    if (title.includes('lock') || title.includes('algebra') || title.includes('equation')) {
+    if (title.includes('block builder') || title.includes('expanding')) {
+      return <AlgebraBlockBuilder />;
+    }
+    if (title.includes('factor') || title.includes('forest') || title.includes('factoris')) {
+      return <FactorForest />;
+    }
+    if (title.includes('balancer') || title.includes('balance') || title.includes('equation')) {
+      return <EquationBalancer />;
+    }
+    if (title.includes('lock') || title.includes('algebra')) {
       return <AlgebraLock />;
     }
     
