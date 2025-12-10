@@ -130,8 +130,8 @@ export default function VisualLearning() {
         </Canvas>
       </div>
 
-      {/* Overlay UI */}
-      <div className="relative z-10 min-h-screen flex flex-col">
+      {/* Overlay UI - pointer-events-none allows clicks to pass through to Canvas */}
+      <div className="relative z-10 min-h-screen flex flex-col pointer-events-none">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
@@ -141,13 +141,13 @@ export default function VisualLearning() {
           <Button
             variant="ghost"
             onClick={() => navigate(`/games/${encodeURIComponent(gameData?.chapter || '')}`)}
-            className="gap-2 text-white/80 hover:text-white hover:bg-white/10"
+            className="gap-2 text-white/80 hover:text-white hover:bg-white/10 pointer-events-auto"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </Button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pointer-events-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -191,7 +191,7 @@ export default function VisualLearning() {
             exit={{ opacity: 0, y: 20 }}
             className="p-4 md:p-6"
           >
-            <div className="max-w-2xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <div className="max-w-2xl mx-auto bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/10 pointer-events-auto">
               <h2 className="text-xl font-semibold text-white mb-3">How It Works</h2>
               <p className="text-white/80 leading-relaxed mb-4">
                 {gameData?.game_concept}
