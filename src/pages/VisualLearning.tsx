@@ -14,6 +14,9 @@ import { TriangleConstructionLab } from '@/components/3d/TriangleConstructionLab
 import { AlgebraBlockBuilder } from '@/components/3d/AlgebraBlockBuilder';
 import { FactorForest } from '@/components/3d/FactorForest';
 import { EquationBalancer } from '@/components/3d/EquationBalancer';
+import { ShapeTransformationLab } from '@/components/3d/ShapeTransformationLab';
+import { CompositeSolidsBuilder } from '@/components/3d/CompositeSolidsBuilder';
+import { OptimizationArena } from '@/components/3d/OptimizationArena';
 
 interface GameData {
   id: string;
@@ -81,6 +84,17 @@ export default function VisualLearning() {
     }
     if (title.includes('balancer') || title.includes('equation')) {
       return <EquationBalancer />;
+    }
+
+    // Volume & Surface Area games
+    if (title.includes('transformation') || title.includes('shape lab')) {
+      return <ShapeTransformationLab />;
+    }
+    if (title.includes('composite') || title.includes('builder')) {
+      return <CompositeSolidsBuilder />;
+    }
+    if (title.includes('optimization') || title.includes('arena')) {
+      return <OptimizationArena />;
     }
 
     // Default fallback
