@@ -1,10 +1,99 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
+import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const triangleQuestions: Question[] = [
+  {
+    question: "What is the sum of all angles in a triangle?",
+    options: ["90°", "180°", "270°", "360°"],
+    correctAnswer: 1
+  },
+  {
+    question: "In a right triangle, which angle is always 90°?",
+    options: ["The smallest angle", "The right angle", "The largest angle", "All angles"],
+    correctAnswer: 1
+  },
+  {
+    question: "The longest side of a right triangle is called?",
+    options: ["Base", "Height", "Hypotenuse", "Adjacent"],
+    correctAnswer: 2
+  },
+  {
+    question: "If two sides of a triangle are equal, it's called?",
+    options: ["Equilateral", "Isosceles", "Scalene", "Right"],
+    correctAnswer: 1
+  },
+  {
+    question: "The Pythagorean theorem states that a² + b² = ?",
+    options: ["c", "c²", "2c", "c/2"],
+    correctAnswer: 1
+  },
+  {
+    question: "What type of triangle has all sides different?",
+    options: ["Equilateral", "Isosceles", "Scalene", "Right"],
+    correctAnswer: 2
+  },
+  {
+    question: "An angle greater than 90° is called?",
+    options: ["Acute", "Right", "Obtuse", "Reflex"],
+    correctAnswer: 2
+  },
+  {
+    question: "The side opposite to an angle in a triangle is used to calculate?",
+    options: ["Only area", "Sine of that angle", "Perimeter", "Nothing specific"],
+    correctAnswer: 1
+  }
+];
+
+function QuizPanel({ 
+  currentQuestion, 
+  onAnswer, 
+  score, 
+  totalQuestions 
+}: { 
+  currentQuestion: Question | null;
+  onAnswer: (index: number) => void;
+  score: number;
+  totalQuestions: number;
+}) {
+  if (!currentQuestion) return null;
+
+  return (
+    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-sm font-medium text-primary">Triangle Quiz</span>
+        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
+      </div>
+      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
+      <div className="space-y-2">
+        {currentQuestion.options.map((option, index) => (
+          <button
+            key={index}
+            onClick={() => onAnswer(index)}
+            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function TriangleConstructionLab() {
   const groupRef = useRef<THREE.Group>(null);
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
   
   // Animated vertices
   const [vertices, setVertices] = useState({
@@ -40,6 +129,34 @@ export function TriangleConstructionLab() {
       groupRef.current.rotation.y = Math.sin(time * 0.1) * 0.3;
     }
   });
+
+  // Trigger question periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInteractionCount(prev => prev + 1);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (interactionCount > 0 && !currentQuestion) {
+      const availableQuestions = triangleQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (availableQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+        const originalIndex = triangleQuestions.indexOf(availableQuestions[randomIndex]);
+        setCurrentQuestion(availableQuestions[randomIndex]);
+        setUsedQuestions(prev => [...prev, originalIndex]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number) => {
+    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
   
   // Calculate side lengths
   const sideAB = Math.sqrt(
@@ -101,6 +218,16 @@ export function TriangleConstructionLab() {
       <directionalLight position={[5, 5, 5]} intensity={0.6} />
       <pointLight position={[-3, 3, 3]} intensity={0.5} color="#8b5cf6" />
       <pointLight position={[3, -2, 2]} intensity={0.4} color="#06b6d4" />
+      
+      {/* Quiz Panel */}
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+        />
+      </Html>
       
       {/* Grid background */}
       <gridHelper args={[10, 20, '#334155', '#1e293b']} position={[0, -2, 0]} />

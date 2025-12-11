@@ -1,13 +1,97 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
+import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const shadowQuestions: Question[] = [
+  {
+    question: "As the sun gets higher, what happens to the shadow length?",
+    options: ["Gets longer", "Gets shorter", "Stays same", "Disappears completely"],
+    correctAnswer: 1
+  },
+  {
+    question: "If you know the height and shadow length, you can find the sun's angle using?",
+    options: ["sin", "cos", "tan", "cot"],
+    correctAnswer: 2
+  },
+  {
+    question: "At noon (sun directly overhead), what is the shadow length?",
+    options: ["Maximum", "Minimum (nearly zero)", "Equal to height", "Double the height"],
+    correctAnswer: 1
+  },
+  {
+    question: "tan(angle) = height / shadow. If angle = 45°, then height equals?",
+    options: ["Shadow × 2", "Shadow", "Shadow / 2", "Shadow²"],
+    correctAnswer: 1
+  },
+  {
+    question: "The angle of elevation is measured from?",
+    options: ["Top of object", "The sun", "The horizontal ground", "Vertical line"],
+    correctAnswer: 2
+  },
+  {
+    question: "If shadow = height, what is the angle of elevation?",
+    options: ["30°", "45°", "60°", "90°"],
+    correctAnswer: 1
+  },
+  {
+    question: "Shadow length = height / tan(angle). If angle is very small, shadow is?",
+    options: ["Very short", "Very long", "Equal to height", "Zero"],
+    correctAnswer: 1
+  }
+];
+
+function QuizPanel({ 
+  currentQuestion, 
+  onAnswer, 
+  score, 
+  totalQuestions 
+}: { 
+  currentQuestion: Question | null;
+  onAnswer: (index: number) => void;
+  score: number;
+  totalQuestions: number;
+}) {
+  if (!currentQuestion) return null;
+
+  return (
+    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-sm font-medium text-primary">Shadow & Angles Quiz</span>
+        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
+      </div>
+      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
+      <div className="space-y-2">
+        {currentQuestion.options.map((option, index) => (
+          <button
+            key={index}
+            onClick={() => onAnswer(index)}
+            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function LighthouseShadow() {
   const sunRef = useRef<THREE.Mesh>(null);
   const shadowRef = useRef<THREE.Mesh>(null);
   const triangleGroupRef = useRef<THREE.Group>(null);
   const [sunAngle, setSunAngle] = useState(45);
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
   
   const lighthouseHeight = 3;
   const shadowLength = lighthouseHeight / Math.tan((sunAngle * Math.PI) / 180);
@@ -27,6 +111,34 @@ export function LighthouseShadow() {
     }
   });
 
+  // Trigger question periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInteractionCount(prev => prev + 1);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
+      const availableQuestions = shadowQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (availableQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+        const originalIndex = shadowQuestions.indexOf(availableQuestions[randomIndex]);
+        setCurrentQuestion(availableQuestions[randomIndex]);
+        setUsedQuestions(prev => [...prev, originalIndex]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number) => {
+    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
+
   // Create ocean waves geometry
   const wavePoints: THREE.Vector3[] = [];
   for (let i = 0; i <= 50; i++) {
@@ -38,6 +150,16 @@ export function LighthouseShadow() {
     <>
       <ambientLight intensity={0.3} />
       <pointLight position={[0, 8, 0]} intensity={0.4} color="#fef3c7" />
+      
+      {/* Quiz Panel */}
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+        />
+      </Html>
       
       {/* Dynamic sun light */}
       <directionalLight 
