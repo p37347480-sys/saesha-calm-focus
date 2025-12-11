@@ -20,6 +20,9 @@ import { OptimizationArena } from '@/components/3d/OptimizationArena';
 import { ProbabilityPlayground } from '@/components/3d/ProbabilityPlayground';
 import { BinomialBlastSimulator } from '@/components/3d/BinomialBlastSimulator';
 import { RealWorldDataExplorer } from '@/components/3d/RealWorldDataExplorer';
+import { FractionWorldBuilder } from '@/components/3d/FractionWorldBuilder';
+import { DecimalCity } from '@/components/3d/DecimalCity';
+import { PercentageQuestArena } from '@/components/3d/PercentageQuestArena';
 
 interface GameData {
   id: string;
@@ -67,6 +70,17 @@ export default function VisualLearning() {
     if (!gameData) return null;
     const title = gameData.game_title.toLowerCase();
 
+    // Numbers & Finance games
+    if (title.includes('fraction') || title.includes('world builder')) {
+      return <FractionWorldBuilder />;
+    }
+    if (title.includes('decimal') || title.includes('city')) {
+      return <DecimalCity />;
+    }
+    if (title.includes('percentage') || title.includes('quest') || title.includes('arena')) {
+      return <PercentageQuestArena />;
+    }
+
     // Probability games
     if (title.includes('playground') || title.includes('randomness')) {
       return <ProbabilityPlayground />;
@@ -90,7 +104,7 @@ export default function VisualLearning() {
     }
 
     // Algebra games
-    if (title.includes('block builder') || title.includes('expanding')) {
+    if (title.includes('block builder') || title.includes('expanding') || title.includes('algebra')) {
       return <AlgebraBlockBuilder />;
     }
     if (title.includes('factor') || title.includes('forest')) {
