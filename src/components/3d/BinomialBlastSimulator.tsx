@@ -11,6 +11,86 @@ interface Trial {
   landed: boolean;
 }
 
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+function QuizPanel({ position, question, onAnswer, score, total }: {
+  position: [number, number, number];
+  question: Question | null;
+  onAnswer: (correct: boolean) => void;
+  score: number;
+  total: number;
+}) {
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleAnswer = (index: number) => {
+    if (showResult || !question) return;
+    setSelectedAnswer(index);
+    setShowResult(true);
+    const isCorrect = index === question.correctIndex;
+    setTimeout(() => {
+      onAnswer(isCorrect);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    }, 2000);
+  };
+
+  if (!question) return null;
+
+  return (
+    <group position={position}>
+      <mesh>
+        <boxGeometry args={[4, 3, 0.1]} />
+        <meshStandardMaterial color="#1e293b" transparent opacity={0.9} />
+      </mesh>
+
+      <Text position={[0, 1.1, 0.1]} fontSize={0.15} color="#fbbf24" anchorX="center" maxWidth={3.5}>
+        Question {total}
+      </Text>
+
+      <Text position={[0, 0.7, 0.1]} fontSize={0.12} color="white" anchorX="center" maxWidth={3.5}>
+        {question.question}
+      </Text>
+
+      {question.options.map((opt, i) => {
+        const isSelected = selectedAnswer === i;
+        const isCorrect = i === question.correctIndex;
+        const bgColor = showResult 
+          ? (isCorrect ? '#22c55e' : isSelected ? '#ef4444' : '#374151')
+          : '#374151';
+        
+        return (
+          <group key={i} position={[-0.8 + (i % 2) * 1.6, 0.1 - Math.floor(i / 2) * 0.5, 0.1]}>
+            <mesh onClick={() => handleAnswer(i)}>
+              <boxGeometry args={[1.4, 0.35, 0.05]} />
+              <meshStandardMaterial color={bgColor} />
+            </mesh>
+            <Text position={[0, 0, 0.05]} fontSize={0.1} color="white" anchorX="center" maxWidth={1.3}>
+              {opt}
+            </Text>
+          </group>
+        );
+      })}
+
+      {showResult && (
+        <Text position={[0, -0.9, 0.1]} fontSize={0.1} color={selectedAnswer === question.correctIndex ? '#22c55e' : '#ef4444'} anchorX="center" maxWidth={3.5}>
+          {selectedAnswer === question.correctIndex ? 'Correct!' : question.explanation}
+        </Text>
+      )}
+
+      <Text position={[1.5, 1.1, 0.1]} fontSize={0.12} color="#22c55e" anchorX="center">
+        Score: {score}/{total - 1}
+      </Text>
+    </group>
+  );
+}
+
 function CoinFlipper({ position, onTrialComplete }: { 
   position: [number, number, number];
   onTrialComplete: (success: boolean) => void;
@@ -255,14 +335,46 @@ function BallLauncher({ position, onTrialComplete }: {
   );
 }
 
+const binomialQuestions: Question[] = [
+  { id: 1, question: "After 10 coin flips with 6 heads, what is the observed success rate?", options: ["40%", "50%", "60%", "70%"], correctIndex: 2, explanation: "6 heads out of 10 = 60%" },
+  { id: 2, question: "As you run more trials, what happens to the success rate?", options: ["Gets random", "Stabilizes", "Always increases", "Always decreases"], correctIndex: 1, explanation: "Law of large numbers - rate stabilizes toward true probability" },
+  { id: 3, question: "What shape does the distribution form with many trials?", options: ["Flat line", "Bell curve", "Zigzag", "Circle"], correctIndex: 1, explanation: "Binomial distribution forms a bell-shaped curve" },
+  { id: 4, question: "If coin is fair, what is the expected heads in 100 flips?", options: ["25", "50", "75", "100"], correctIndex: 1, explanation: "Fair coin = 50% chance, so 50 out of 100 expected" },
+  { id: 5, question: "Why do we run many trials in probability experiments?", options: ["More fun", "Better accuracy", "Faster results", "Smaller numbers"], correctIndex: 1, explanation: "More trials give more accurate probability estimates" },
+];
+
 export function BinomialBlastSimulator() {
   const [trials, setTrials] = useState<{ success: boolean }[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const lastQuizTrialRef = useRef(0);
 
   const handleTrialComplete = useCallback((success: boolean) => {
-    setTrials(prev => [...prev, { success }]);
-  }, []);
+    setTrials(prev => {
+      const newTrials = [...prev, { success }];
+      // Trigger question every 10 trials
+      if (newTrials.length >= lastQuizTrialRef.current + 10 && questionCount < binomialQuestions.length) {
+        lastQuizTrialRef.current = newTrials.length;
+        setCurrentQuestion(binomialQuestions[questionCount]);
+        setShowQuiz(true);
+      }
+      return newTrials;
+    });
+  }, [questionCount]);
 
-  const resetTrials = () => setTrials([]);
+  const handleAnswer = (correct: boolean) => {
+    if (correct) setScore(prev => prev + 1);
+    setQuestionCount(prev => prev + 1);
+    setShowQuiz(false);
+    setCurrentQuestion(null);
+  };
+
+  const resetTrials = () => {
+    setTrials([]);
+    lastQuizTrialRef.current = 0;
+  };
 
   return (
     <>
@@ -271,16 +383,20 @@ export function BinomialBlastSimulator() {
       <pointLight position={[-3, 2, 0]} intensity={0.6} color="#22c55e" />
       <pointLight position={[3, 2, 0]} intensity={0.6} color="#ef4444" />
 
-      {/* Coin Flipper */}
       <CoinFlipper position={[-4, 0, -2]} onTrialComplete={handleTrialComplete} />
-
-      {/* Ball Launcher */}
       <BallLauncher position={[0, 0, -2]} onTrialComplete={handleTrialComplete} />
-
-      {/* Distribution Display */}
       <DistributionDisplay position={[4.5, 0, -2]} trials={trials} />
 
-      {/* Reset button */}
+      {showQuiz && (
+        <QuizPanel 
+          position={[0, 1.5, 2]} 
+          question={currentQuestion} 
+          onAnswer={handleAnswer}
+          score={score}
+          total={questionCount + 1}
+        />
+      )}
+
       <mesh position={[4.5, -2.5, -2]} onClick={resetTrials}>
         <boxGeometry args={[1, 0.4, 0.2]} />
         <meshStandardMaterial color="#ef4444" />
@@ -289,30 +405,16 @@ export function BinomialBlastSimulator() {
         Reset
       </Text>
 
-      {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, -2]}>
         <planeGeometry args={[20, 15]} />
         <meshStandardMaterial color="#0f172a" transparent opacity={0.4} />
       </mesh>
 
-      {/* Title */}
-      <Text
-        position={[0, 4, -2]}
-        fontSize={0.4}
-        color="white"
-        anchorX="center"
-        fontWeight="bold"
-      >
+      <Text position={[0, 4, -2]} fontSize={0.4} color="white" anchorX="center" fontWeight="bold">
         Binomial Blast Simulator
       </Text>
-
-      <Text
-        position={[0, 3.5, -2]}
-        fontSize={0.15}
-        color="#94a3b8"
-        anchorX="center"
-      >
-        Run trials and watch the distribution form!
+      <Text position={[0, 3.5, -2]} fontSize={0.15} color="#94a3b8" anchorX="center">
+        Run trials and answer questions! Score: {score}/{questionCount}
       </Text>
     </>
   );

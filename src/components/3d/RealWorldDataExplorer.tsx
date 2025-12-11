@@ -3,7 +3,87 @@ import { useFrame } from '@react-three/fiber';
 import { Float, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
-function BusStop({ position }: { position: [number, number, number] }) {
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+function QuizPanel({ position, question, onAnswer, score, total }: {
+  position: [number, number, number];
+  question: Question | null;
+  onAnswer: (correct: boolean) => void;
+  score: number;
+  total: number;
+}) {
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleAnswer = (index: number) => {
+    if (showResult || !question) return;
+    setSelectedAnswer(index);
+    setShowResult(true);
+    const isCorrect = index === question.correctIndex;
+    setTimeout(() => {
+      onAnswer(isCorrect);
+      setSelectedAnswer(null);
+      setShowResult(false);
+    }, 2000);
+  };
+
+  if (!question) return null;
+
+  return (
+    <group position={position}>
+      <mesh>
+        <boxGeometry args={[4, 3, 0.1]} />
+        <meshStandardMaterial color="#1e293b" transparent opacity={0.9} />
+      </mesh>
+
+      <Text position={[0, 1.1, 0.1]} fontSize={0.15} color="#fbbf24" anchorX="center" maxWidth={3.5}>
+        Question {total}
+      </Text>
+
+      <Text position={[0, 0.7, 0.1]} fontSize={0.12} color="white" anchorX="center" maxWidth={3.5}>
+        {question.question}
+      </Text>
+
+      {question.options.map((opt, i) => {
+        const isSelected = selectedAnswer === i;
+        const isCorrect = i === question.correctIndex;
+        const bgColor = showResult 
+          ? (isCorrect ? '#22c55e' : isSelected ? '#ef4444' : '#374151')
+          : '#374151';
+        
+        return (
+          <group key={i} position={[-0.8 + (i % 2) * 1.6, 0.1 - Math.floor(i / 2) * 0.5, 0.1]}>
+            <mesh onClick={() => handleAnswer(i)}>
+              <boxGeometry args={[1.4, 0.35, 0.05]} />
+              <meshStandardMaterial color={bgColor} />
+            </mesh>
+            <Text position={[0, 0, 0.05]} fontSize={0.1} color="white" anchorX="center" maxWidth={1.3}>
+              {opt}
+            </Text>
+          </group>
+        );
+      })}
+
+      {showResult && (
+        <Text position={[0, -0.9, 0.1]} fontSize={0.1} color={selectedAnswer === question.correctIndex ? '#22c55e' : '#ef4444'} anchorX="center" maxWidth={3.5}>
+          {selectedAnswer === question.correctIndex ? 'Correct!' : question.explanation}
+        </Text>
+      )}
+
+      <Text position={[1.5, 1.1, 0.1]} fontSize={0.12} color="#22c55e" anchorX="center">
+        Score: {score}/{total - 1}
+      </Text>
+    </group>
+  );
+}
+
+function BusStop({ position, onBusArrive }: { position: [number, number, number]; onBusArrive?: () => void }) {
   const [busVisible, setBusVisible] = useState(false);
   const [waitTime, setWaitTime] = useState(0);
   const [arrivals, setArrivals] = useState<number[]>([]);
@@ -12,11 +92,12 @@ function BusStop({ position }: { position: [number, number, number] }) {
 
   useEffect(() => {
     const scheduleBus = () => {
-      const delay = 3000 + Math.random() * 7000; // 3-10 seconds
+      const delay = 3000 + Math.random() * 7000;
       setTimeout(() => {
         setBusVisible(true);
         setArrivals(prev => [...prev.slice(-9), waitTime]);
         busPositionRef.current = -8;
+        onBusArrive?.();
       }, delay);
     };
     
@@ -93,14 +174,14 @@ function BusStop({ position }: { position: [number, number, number] }) {
   );
 }
 
-function WeatherDome({ position }: { position: [number, number, number] }) {
+function WeatherDome({ position, onWeatherChange }: { position: [number, number, number]; onWeatherChange?: () => void }) {
   const [weather, setWeather] = useState<'sun' | 'rain' | 'cloud'>('sun');
   const [history, setHistory] = useState<string[]>([]);
   const particlesRef = useRef<THREE.Points>(null);
 
   const changeWeather = () => {
     const weathers: ('sun' | 'rain' | 'cloud')[] = ['sun', 'rain', 'cloud'];
-    const weights = [0.5, 0.3, 0.2]; // 50% sun, 30% rain, 20% cloud
+    const weights = [0.5, 0.3, 0.2];
     const random = Math.random();
     let cumulative = 0;
     let newWeather: 'sun' | 'rain' | 'cloud' = 'sun';
@@ -115,6 +196,7 @@ function WeatherDome({ position }: { position: [number, number, number] }) {
     
     setWeather(newWeather);
     setHistory(prev => [...prev.slice(-19), newWeather]);
+    onWeatherChange?.();
   };
 
   useFrame((state) => {
@@ -301,13 +383,12 @@ function TrafficLight({ position }: { position: [number, number, number] }) {
   );
 }
 
-function SportsScoreboard({ position }: { position: [number, number, number] }) {
+function SportsScoreboard({ position, onGamePlay }: { position: [number, number, number]; onGamePlay?: () => void }) {
   const [teamAScore, setTeamAScore] = useState(0);
   const [teamBScore, setTeamBScore] = useState(0);
   const [games, setGames] = useState<{ winner: 'A' | 'B' }[]>([]);
 
   const playGame = () => {
-    // Team A has 55% win probability
     const teamAWins = Math.random() < 0.55;
     if (teamAWins) {
       setTeamAScore(prev => prev + 1);
@@ -316,6 +397,7 @@ function SportsScoreboard({ position }: { position: [number, number, number] }) 
       setTeamBScore(prev => prev + 1);
       setGames(prev => [...prev.slice(-19), { winner: 'B' }]);
     }
+    onGamePlay?.();
   };
 
   const playMany = (count: number) => {
@@ -406,7 +488,39 @@ function SportsScoreboard({ position }: { position: [number, number, number] }) 
   );
 }
 
+const realWorldQuestions: Question[] = [
+  { id: 1, question: "If buses arrive randomly every 3-10 seconds, is next arrival predictable?", options: ["Yes, exactly", "No, random", "Always 5s", "Never arrives"], correctIndex: 1, explanation: "Random intervals mean we cannot predict exact arrival times" },
+  { id: 2, question: "If sun appears 50% of days, what does this probability tell us?", options: ["Always sunny", "Long-term pattern", "Tomorrow sunny", "Never rains"], correctIndex: 1, explanation: "Probability describes long-term frequency, not individual events" },
+  { id: 3, question: "A team with 55% win rate plays 100 games. About how many wins?", options: ["25", "40", "55", "75"], correctIndex: 2, explanation: "55% of 100 games = about 55 wins expected" },
+  { id: 4, question: "Traffic lights have patterns. Is the timing truly random?", options: ["Yes, fully random", "No, programmed", "Changes daily", "No pattern"], correctIndex: 1, explanation: "Traffic lights follow programmed cycles with some variation" },
+  { id: 5, question: "Why do we collect data over time to understand probability?", options: ["For fun", "Patterns emerge", "To guess", "No reason"], correctIndex: 1, explanation: "More observations reveal underlying probability patterns" },
+];
+
 export function RealWorldDataExplorer() {
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [interactionCount, setInteractionCount] = useState(0);
+
+  const triggerQuestion = () => {
+    setInteractionCount(prev => {
+      const newCount = prev + 1;
+      if (newCount % 3 === 0 && questionCount < realWorldQuestions.length) {
+        setCurrentQuestion(realWorldQuestions[questionCount]);
+        setShowQuiz(true);
+      }
+      return newCount;
+    });
+  };
+
+  const handleAnswer = (correct: boolean) => {
+    if (correct) setScore(prev => prev + 1);
+    setQuestionCount(prev => prev + 1);
+    setShowQuiz(false);
+    setCurrentQuestion(null);
+  };
+
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -414,25 +528,26 @@ export function RealWorldDataExplorer() {
       <pointLight position={[-4, 2, 0]} intensity={0.6} color="#f59e0b" />
       <pointLight position={[4, 2, 0]} intensity={0.6} color="#3b82f6" />
 
-      {/* Bus Stop */}
-      <BusStop position={[-5, -1.5, -3]} />
-
-      {/* Weather Dome */}
-      <WeatherDome position={[-1.5, -1.5, -2]} />
-
-      {/* Traffic Light */}
+      <BusStop position={[-5, -1.5, -3]} onBusArrive={triggerQuestion} />
+      <WeatherDome position={[-1.5, -1.5, -2]} onWeatherChange={triggerQuestion} />
       <TrafficLight position={[1.5, -1.5, -2]} />
+      <SportsScoreboard position={[5, 0, -3]} onGamePlay={triggerQuestion} />
 
-      {/* Sports Scoreboard */}
-      <SportsScoreboard position={[5, 0, -3]} />
+      {showQuiz && (
+        <QuizPanel 
+          position={[0, 1.5, 2]} 
+          question={currentQuestion} 
+          onAnswer={handleAnswer}
+          score={score}
+          total={questionCount + 1}
+        />
+      )}
 
-      {/* City ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.5, -2]}>
         <planeGeometry args={[25, 15]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
 
-      {/* Grass patches */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3, -2.49, 0]}>
         <circleGeometry args={[1.5, 32]} />
         <meshStandardMaterial color="#166534" />
@@ -442,24 +557,11 @@ export function RealWorldDataExplorer() {
         <meshStandardMaterial color="#166534" />
       </mesh>
 
-      {/* Title */}
-      <Text
-        position={[0, 4, -2]}
-        fontSize={0.4}
-        color="white"
-        anchorX="center"
-        fontWeight="bold"
-      >
+      <Text position={[0, 4, -2]} fontSize={0.4} color="white" anchorX="center" fontWeight="bold">
         Real-World Data Explorer
       </Text>
-
-      <Text
-        position={[0, 3.5, -2]}
-        fontSize={0.15}
-        color="#94a3b8"
-        anchorX="center"
-      >
-        Explore probability in everyday scenarios!
+      <Text position={[0, 3.5, -2]} fontSize={0.15} color="#94a3b8" anchorX="center">
+        Explore and learn! Score: {score}/{questionCount}
       </Text>
     </>
   );
