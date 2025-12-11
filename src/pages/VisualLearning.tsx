@@ -17,6 +17,9 @@ import { EquationBalancer } from '@/components/3d/EquationBalancer';
 import { ShapeTransformationLab } from '@/components/3d/ShapeTransformationLab';
 import { CompositeSolidsBuilder } from '@/components/3d/CompositeSolidsBuilder';
 import { OptimizationArena } from '@/components/3d/OptimizationArena';
+import { ProbabilityPlayground } from '@/components/3d/ProbabilityPlayground';
+import { BinomialBlastSimulator } from '@/components/3d/BinomialBlastSimulator';
+import { RealWorldDataExplorer } from '@/components/3d/RealWorldDataExplorer';
 
 interface GameData {
   id: string;
@@ -63,6 +66,17 @@ export default function VisualLearning() {
   const get3DScene = () => {
     if (!gameData) return null;
     const title = gameData.game_title.toLowerCase();
+
+    // Probability games
+    if (title.includes('playground') || title.includes('randomness')) {
+      return <ProbabilityPlayground />;
+    }
+    if (title.includes('binomial') || title.includes('blast')) {
+      return <BinomialBlastSimulator />;
+    }
+    if (title.includes('real-world') || title.includes('data explorer')) {
+      return <RealWorldDataExplorer />;
+    }
 
     // Trigonometry games
     if (title.includes('mountain') || title.includes('climb')) {
