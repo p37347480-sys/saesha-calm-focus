@@ -1,12 +1,96 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Text } from '@react-three/drei';
+import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const trigQuestions: Question[] = [
+  {
+    question: "In a right triangle, sin(θ) equals which ratio?",
+    options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Hypotenuse / Opposite"],
+    correctAnswer: 0
+  },
+  {
+    question: "If the angle increases, what happens to the height (opposite side)?",
+    options: ["It decreases", "It increases", "Stays the same", "Becomes negative"],
+    correctAnswer: 1
+  },
+  {
+    question: "What is cos(θ) in a right triangle?",
+    options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Adjacent / Opposite"],
+    correctAnswer: 1
+  },
+  {
+    question: "The hypotenuse is always the...",
+    options: ["Shortest side", "Longest side", "Vertical side", "Horizontal side"],
+    correctAnswer: 1
+  },
+  {
+    question: "tan(θ) = sin(θ) / cos(θ). What's another way to express tan(θ)?",
+    options: ["Adjacent / Opposite", "Hypotenuse / Adjacent", "Opposite / Adjacent", "Opposite / Hypotenuse"],
+    correctAnswer: 2
+  },
+  {
+    question: "At 45°, what is the relationship between sin and cos?",
+    options: ["sin > cos", "sin < cos", "sin = cos", "sin × cos = 1"],
+    correctAnswer: 2
+  },
+  {
+    question: "As the angle approaches 90°, what happens to tan(θ)?",
+    options: ["Approaches 0", "Approaches 1", "Approaches infinity", "Becomes negative"],
+    correctAnswer: 2
+  }
+];
+
+function QuizPanel({ 
+  currentQuestion, 
+  onAnswer, 
+  score, 
+  totalQuestions 
+}: { 
+  currentQuestion: Question | null;
+  onAnswer: (index: number) => void;
+  score: number;
+  totalQuestions: number;
+}) {
+  if (!currentQuestion) return null;
+
+  return (
+    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-sm font-medium text-primary">Trigonometry Quiz</span>
+        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
+      </div>
+      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
+      <div className="space-y-2">
+        {currentQuestion.options.map((option, index) => (
+          <button
+            key={index}
+            onClick={() => onAnswer(index)}
+            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function MountainClimbExplorer() {
   const triangleRef = useRef<THREE.Group>(null);
   const [angle, setAngle] = useState(45);
   const ropeRef = useRef<THREE.Mesh>(null);
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
   
   // Calculate triangle dimensions based on angle
   const baseLength = 3;
@@ -26,6 +110,34 @@ export function MountainClimbExplorer() {
     setAngle(newAngle);
   });
 
+  // Trigger question every few seconds of viewing
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInteractionCount(prev => prev + 1);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
+      const availableQuestions = trigQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (availableQuestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+        const originalIndex = trigQuestions.indexOf(availableQuestions[randomIndex]);
+        setCurrentQuestion(availableQuestions[randomIndex]);
+        setUsedQuestions(prev => [...prev, originalIndex]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number) => {
+    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
+
   // Create mountain terrain
   const mountainShape = new THREE.Shape();
   mountainShape.moveTo(-5, -2);
@@ -42,6 +154,16 @@ export function MountainClimbExplorer() {
       <directionalLight position={[10, 10, 5]} intensity={0.8} color="#fcd34d" />
       <pointLight position={[0, 5, 0]} intensity={0.6} color="#10b981" />
       <fog attach="fog" args={['#1a1a2e', 5, 20]} />
+      
+      {/* Quiz Panel */}
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+        />
+      </Html>
       
       {/* Mountain backdrop */}
       <mesh position={[-2, -1, -5]}>
