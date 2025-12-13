@@ -10,46 +10,21 @@ interface Question {
 }
 
 const algebraQuestions: Question[] = [
-  {
-    question: "(a + b)² expands to?",
-    options: ["a² + b²", "a² + 2ab + b²", "a² - 2ab + b²", "2a² + 2b²"],
-    correctAnswer: 1
-  },
-  {
-    question: "What is the area of a square with side 'x'?",
-    options: ["4x", "2x", "x²", "x + x"],
-    correctAnswer: 2
-  },
-  {
-    question: "(x + 3)(x + 2) = ?",
-    options: ["x² + 5x + 6", "x² + 6x + 5", "x² + 5x + 5", "2x + 5"],
-    correctAnswer: 0
-  },
-  {
-    question: "If a = 3 and b = 2, what is ab?",
-    options: ["5", "6", "32", "1"],
-    correctAnswer: 1
-  },
-  {
-    question: "The area of a rectangle with length a and width b is?",
-    options: ["a + b", "2(a + b)", "a × b", "a² + b²"],
-    correctAnswer: 2
-  },
-  {
-    question: "(a - b)² equals?",
-    options: ["a² - b²", "a² + 2ab + b²", "a² - 2ab + b²", "a² - ab + b²"],
-    correctAnswer: 2
-  },
-  {
-    question: "What does 2ab represent geometrically?",
-    options: ["Two squares", "Two rectangles of size a×b", "A single line", "A circle"],
-    correctAnswer: 1
-  },
-  {
-    question: "x² + 6x + 9 factors to?",
-    options: ["(x + 3)²", "(x - 3)²", "(x + 9)(x - 3)", "(x + 1)(x + 9)"],
-    correctAnswer: 0
-  }
+  { question: "(a + b)² expands to?", options: ["a² + b²", "a² + 2ab + b²", "a² - 2ab + b²", "2a² + 2b²"], correctAnswer: 1 },
+  { question: "What is the area of a square with side 'x'?", options: ["4x", "2x", "x²", "x + x"], correctAnswer: 2 },
+  { question: "(x + 3)(x + 2) = ?", options: ["x² + 5x + 6", "x² + 6x + 5", "x² + 5x + 5", "2x + 5"], correctAnswer: 0 },
+  { question: "If a = 3 and b = 2, what is ab?", options: ["5", "6", "32", "1"], correctAnswer: 1 },
+  { question: "The area of a rectangle with length a and width b is?", options: ["a + b", "2(a + b)", "a × b", "a² + b²"], correctAnswer: 2 },
+  { question: "(a - b)² equals?", options: ["a² - b²", "a² + 2ab + b²", "a² - 2ab + b²", "a² - ab + b²"], correctAnswer: 2 },
+  { question: "What does 2ab represent geometrically?", options: ["Two squares", "Two rectangles of size a×b", "A single line", "A circle"], correctAnswer: 1 },
+  { question: "x² + 6x + 9 factors to?", options: ["(x + 3)²", "(x - 3)²", "(x + 9)(x - 3)", "(x + 1)(x + 9)"], correctAnswer: 0 },
+  { question: "(a + b)(a - b) = ?", options: ["a² + b²", "a² - b²", "2ab", "a² - 2ab + b²"], correctAnswer: 1 },
+  { question: "If x = 5, what is 2x + 3?", options: ["10", "13", "8", "25"], correctAnswer: 1 },
+  { question: "Simplify: 3x + 5x", options: ["8x", "15x", "8x²", "35x"], correctAnswer: 0 },
+  { question: "What is (x + 4)² expanded?", options: ["x² + 8x + 16", "x² + 4x + 16", "x² + 8x + 8", "x² + 16"], correctAnswer: 0 },
+  { question: "If 2x = 10, what is x?", options: ["2", "5", "10", "20"], correctAnswer: 1 },
+  { question: "Factor: x² - 9", options: ["(x - 3)²", "(x + 3)²", "(x + 3)(x - 3)", "(x - 9)(x + 1)"], correctAnswer: 2 },
+  { question: "What is the coefficient of x in 5x² + 3x - 7?", options: ["5", "3", "-7", "1"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
@@ -253,8 +228,25 @@ export function AlgebraBlockBuilder() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
   useEffect(() => {
-    if (interactionCount > 0 && interactionCount % 3 === 0 && !currentQuestion) {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < algebraQuestions.length) {
+        const available = algebraQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = algebraQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = algebraQuestions.filter((_, i) => !usedQuestions.includes(i));
       if (available.length > 0) {
         const randomIdx = Math.floor(Math.random() * available.length);

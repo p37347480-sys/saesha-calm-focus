@@ -10,46 +10,21 @@ interface Question {
 }
 
 const decimalQuestions: Question[] = [
-  {
-    question: "What decimal is the same as 1/2?",
-    options: ["0.2", "0.5", "0.25", "0.75"],
-    correctAnswer: 1
-  },
-  {
-    question: "In 3.45, what does the 4 represent?",
-    options: ["4 ones", "4 tenths", "4 hundredths", "4 tens"],
-    correctAnswer: 1
-  },
-  {
-    question: "Which is larger: 0.3 or 0.25?",
-    options: ["0.3", "0.25", "They're equal", "Cannot compare"],
-    correctAnswer: 0
-  },
-  {
-    question: "What is 0.1 + 0.1 + 0.1?",
-    options: ["0.111", "0.3", "1.11", "0.03"],
-    correctAnswer: 1
-  },
-  {
-    question: "1/4 as a decimal is?",
-    options: ["0.14", "0.4", "0.25", "0.75"],
-    correctAnswer: 2
-  },
-  {
-    question: "How many tenths are in one whole?",
-    options: ["5", "10", "100", "1"],
-    correctAnswer: 1
-  },
-  {
-    question: "0.75 as a fraction is?",
-    options: ["7/5", "3/4", "75/10", "7/50"],
-    correctAnswer: 1
-  },
-  {
-    question: "What is 0.5 × 2?",
-    options: ["0.1", "0.25", "1", "2.5"],
-    correctAnswer: 2
-  }
+  { question: "What decimal is the same as 1/2?", options: ["0.2", "0.5", "0.25", "0.75"], correctAnswer: 1 },
+  { question: "In 3.45, what does the 4 represent?", options: ["4 ones", "4 tenths", "4 hundredths", "4 tens"], correctAnswer: 1 },
+  { question: "Which is larger: 0.3 or 0.25?", options: ["0.3", "0.25", "They're equal", "Cannot compare"], correctAnswer: 0 },
+  { question: "What is 0.1 + 0.1 + 0.1?", options: ["0.111", "0.3", "1.11", "0.03"], correctAnswer: 1 },
+  { question: "1/4 as a decimal is?", options: ["0.14", "0.4", "0.25", "0.75"], correctAnswer: 2 },
+  { question: "How many tenths are in one whole?", options: ["5", "10", "100", "1"], correctAnswer: 1 },
+  { question: "0.75 as a fraction is?", options: ["7/5", "3/4", "75/10", "7/50"], correctAnswer: 1 },
+  { question: "What is 0.5 × 2?", options: ["0.1", "0.25", "1", "2.5"], correctAnswer: 2 },
+  { question: "What is 1.5 + 0.5?", options: ["1.0", "2.0", "1.55", "2.5"], correctAnswer: 1 },
+  { question: "Which is smaller: 0.09 or 0.1?", options: ["0.09", "0.1", "They're equal", "Cannot tell"], correctAnswer: 0 },
+  { question: "In 2.375, the 7 is in which place?", options: ["Tenths", "Hundredths", "Thousandths", "Ones"], correctAnswer: 1 },
+  { question: "What is 0.6 + 0.4?", options: ["0.10", "1.0", "0.64", "10"], correctAnswer: 1 },
+  { question: "3/5 as a decimal is?", options: ["0.35", "0.6", "0.53", "0.3"], correctAnswer: 1 },
+  { question: "What is 2.5 - 1.5?", options: ["0.5", "1.0", "1.5", "3.0"], correctAnswer: 1 },
+  { question: "Round 3.67 to the nearest tenth:", options: ["3.6", "3.7", "4.0", "3.0"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
@@ -263,8 +238,25 @@ export function DecimalCity() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
   useEffect(() => {
-    if (interactionCount > 0 && interactionCount % 4 === 0 && !currentQuestion) {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < decimalQuestions.length) {
+        const available = decimalQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = decimalQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = decimalQuestions.filter((_, i) => !usedQuestions.includes(i));
       if (available.length > 0) {
         const randomIdx = Math.floor(Math.random() * available.length);

@@ -10,46 +10,21 @@ interface Question {
 }
 
 const equationQuestions: Question[] = [
-  {
-    question: "If 2x = 10, what is x?",
-    options: ["2", "5", "10", "20"],
-    correctAnswer: 1
-  },
-  {
-    question: "To solve x + 5 = 12, what operation do we use?",
-    options: ["Add 5", "Subtract 5", "Multiply by 5", "Divide by 5"],
-    correctAnswer: 1
-  },
-  {
-    question: "If 3x + 2 = 14, what is x?",
-    options: ["2", "3", "4", "6"],
-    correctAnswer: 2
-  },
-  {
-    question: "An equation is balanced when?",
-    options: ["Left side is bigger", "Right side is bigger", "Both sides are equal", "One side is zero"],
-    correctAnswer: 2
-  },
-  {
-    question: "If x - 7 = 3, what is x?",
-    options: ["4", "7", "10", "-4"],
-    correctAnswer: 2
-  },
-  {
-    question: "To isolate x in 4x = 20, we?",
-    options: ["Add 4", "Subtract 4", "Multiply by 4", "Divide by 4"],
-    correctAnswer: 3
-  },
-  {
-    question: "In 2x + 3 = x + 7, x equals?",
-    options: ["2", "3", "4", "7"],
-    correctAnswer: 2
-  },
-  {
-    question: "Whatever we do to one side of an equation, we must?",
-    options: ["Do the opposite to the other", "Do the same to the other", "Leave the other alone", "Double the other"],
-    correctAnswer: 1
-  }
+  { question: "If 2x = 10, what is x?", options: ["2", "5", "10", "20"], correctAnswer: 1 },
+  { question: "To solve x + 5 = 12, what operation do we use?", options: ["Add 5", "Subtract 5", "Multiply by 5", "Divide by 5"], correctAnswer: 1 },
+  { question: "If 3x + 2 = 14, what is x?", options: ["2", "3", "4", "6"], correctAnswer: 2 },
+  { question: "An equation is balanced when?", options: ["Left side is bigger", "Right side is bigger", "Both sides are equal", "One side is zero"], correctAnswer: 2 },
+  { question: "If x - 7 = 3, what is x?", options: ["4", "7", "10", "-4"], correctAnswer: 2 },
+  { question: "To isolate x in 4x = 20, we?", options: ["Add 4", "Subtract 4", "Multiply by 4", "Divide by 4"], correctAnswer: 3 },
+  { question: "In 2x + 3 = x + 7, x equals?", options: ["2", "3", "4", "7"], correctAnswer: 2 },
+  { question: "Whatever we do to one side of an equation, we must?", options: ["Do the opposite to the other", "Do the same to the other", "Leave the other alone", "Double the other"], correctAnswer: 1 },
+  { question: "Solve: x/3 = 6", options: ["x = 2", "x = 9", "x = 18", "x = 3"], correctAnswer: 2 },
+  { question: "If 5x - 10 = 15, what is x?", options: ["1", "3", "5", "25"], correctAnswer: 2 },
+  { question: "What is the inverse of addition?", options: ["Multiplication", "Division", "Subtraction", "Exponent"], correctAnswer: 2 },
+  { question: "Solve: 2(x + 3) = 10", options: ["x = 1", "x = 2", "x = 3", "x = 5"], correctAnswer: 1 },
+  { question: "If -x = 5, what is x?", options: ["5", "-5", "0", "1/5"], correctAnswer: 1 },
+  { question: "Solve: x + x + x = 15", options: ["x = 3", "x = 5", "x = 15", "x = 45"], correctAnswer: 1 },
+  { question: "In the equation 7x = 49, x equals?", options: ["6", "7", "8", "42"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 

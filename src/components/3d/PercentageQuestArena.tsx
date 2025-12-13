@@ -10,46 +10,21 @@ interface Question {
 }
 
 const percentageQuestions: Question[] = [
-  {
-    question: "What is 50% of 100?",
-    options: ["25", "50", "75", "100"],
-    correctAnswer: 1
-  },
-  {
-    question: "If a $100 item is 25% off, how much do you save?",
-    options: ["$10", "$25", "$50", "$75"],
-    correctAnswer: 1
-  },
-  {
-    question: "What percentage is 3/4?",
-    options: ["25%", "50%", "75%", "100%"],
-    correctAnswer: 2
-  },
-  {
-    question: "A tank is 40% full. What percentage is empty?",
-    options: ["40%", "50%", "60%", "80%"],
-    correctAnswer: 2
-  },
-  {
-    question: "If you score 8 out of 10, what's your percentage?",
-    options: ["70%", "80%", "85%", "90%"],
-    correctAnswer: 1
-  },
-  {
-    question: "10% of 200 is?",
-    options: ["10", "20", "50", "100"],
-    correctAnswer: 1
-  },
-  {
-    question: "If price increases by 50%, a $20 item becomes?",
-    options: ["$25", "$30", "$35", "$40"],
-    correctAnswer: 1
-  },
-  {
-    question: "What's bigger: 1/3 or 30%?",
-    options: ["1/3 (≈33%)", "30%", "They're equal", "Cannot compare"],
-    correctAnswer: 0
-  }
+  { question: "What is 50% of 100?", options: ["25", "50", "75", "100"], correctAnswer: 1 },
+  { question: "If a $100 item is 25% off, how much do you save?", options: ["$10", "$25", "$50", "$75"], correctAnswer: 1 },
+  { question: "What percentage is 3/4?", options: ["25%", "50%", "75%", "100%"], correctAnswer: 2 },
+  { question: "A tank is 40% full. What percentage is empty?", options: ["40%", "50%", "60%", "80%"], correctAnswer: 2 },
+  { question: "If you score 8 out of 10, what's your percentage?", options: ["70%", "80%", "85%", "90%"], correctAnswer: 1 },
+  { question: "10% of 200 is?", options: ["10", "20", "50", "100"], correctAnswer: 1 },
+  { question: "If price increases by 50%, a $20 item becomes?", options: ["$25", "$30", "$35", "$40"], correctAnswer: 1 },
+  { question: "What's bigger: 1/3 or 30%?", options: ["1/3 (≈33%)", "30%", "They're equal", "Cannot compare"], correctAnswer: 0 },
+  { question: "25% of 80 equals?", options: ["15", "20", "25", "40"], correctAnswer: 1 },
+  { question: "A shirt costs $40, now 20% off. Final price?", options: ["$20", "$28", "$32", "$36"], correctAnswer: 2 },
+  { question: "If 30 out of 50 students passed, what percentage passed?", options: ["30%", "50%", "60%", "70%"], correctAnswer: 2 },
+  { question: "What is 100% of any number?", options: ["0", "Half of it", "The number itself", "Double it"], correctAnswer: 2 },
+  { question: "15% tip on a $60 meal is?", options: ["$6", "$9", "$12", "$15"], correctAnswer: 1 },
+  { question: "A price dropped from $50 to $40. What % decrease?", options: ["10%", "15%", "20%", "25%"], correctAnswer: 2 },
+  { question: "What percentage is 1/5?", options: ["15%", "20%", "25%", "50%"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
@@ -327,8 +302,25 @@ export function PercentageQuestArena() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
   useEffect(() => {
-    if (interactionCount > 0 && interactionCount % 3 === 0 && !currentQuestion) {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < percentageQuestions.length) {
+        const available = percentageQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = percentageQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = percentageQuestions.filter((_, i) => !usedQuestions.includes(i));
       if (available.length > 0) {
         const randomIdx = Math.floor(Math.random() * available.length);
