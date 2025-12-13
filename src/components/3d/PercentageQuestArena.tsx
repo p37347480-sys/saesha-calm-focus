@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
 
 interface Question {
   question: string;
@@ -27,35 +28,7 @@ const percentageQuestions: Question[] = [
   { question: "What percentage is 1/5?", options: ["15%", "20%", "25%", "50%"], correctAnswer: 1 }
 ];
 
-function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
-  currentQuestion: Question | null;
-  onAnswer: (index: number) => void;
-  score: number;
-  totalQuestions: number;
-}) {
-  if (!currentQuestion) return null;
-
-  return (
-    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-sm font-medium text-primary">🏆 Percentage Quiz</span>
-        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
-      </div>
-      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
-      <div className="space-y-2">
-        {currentQuestion.options.map((option, index) => (
-          <button
-            key={index}
-            onClick={() => onAnswer(index)}
-            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Using shared QuizPanel component from ./QuizPanel
 
 // Water tank showing percentage fill
 function WaterTank({ 
@@ -331,8 +304,8 @@ export function PercentageQuestArena() {
     }
   }, [interactionCount]);
 
-  const handleAnswer = (selectedIndex: number) => {
-    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
     setQuestionsAnswered(prev => prev + 1);
@@ -353,6 +326,8 @@ export function PercentageQuestArena() {
           onAnswer={handleAnswer}
           score={score}
           totalQuestions={questionsAnswered}
+          emoji="🏆"
+          title="Percentage Quiz"
         />
       </Html>
 
