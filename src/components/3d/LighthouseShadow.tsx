@@ -10,41 +10,21 @@ interface Question {
 }
 
 const shadowQuestions: Question[] = [
-  {
-    question: "As the sun gets higher, what happens to the shadow length?",
-    options: ["Gets longer", "Gets shorter", "Stays same", "Disappears completely"],
-    correctAnswer: 1
-  },
-  {
-    question: "If you know the height and shadow length, you can find the sun's angle using?",
-    options: ["sin", "cos", "tan", "cot"],
-    correctAnswer: 2
-  },
-  {
-    question: "At noon (sun directly overhead), what is the shadow length?",
-    options: ["Maximum", "Minimum (nearly zero)", "Equal to height", "Double the height"],
-    correctAnswer: 1
-  },
-  {
-    question: "tan(angle) = height / shadow. If angle = 45°, then height equals?",
-    options: ["Shadow × 2", "Shadow", "Shadow / 2", "Shadow²"],
-    correctAnswer: 1
-  },
-  {
-    question: "The angle of elevation is measured from?",
-    options: ["Top of object", "The sun", "The horizontal ground", "Vertical line"],
-    correctAnswer: 2
-  },
-  {
-    question: "If shadow = height, what is the angle of elevation?",
-    options: ["30°", "45°", "60°", "90°"],
-    correctAnswer: 1
-  },
-  {
-    question: "Shadow length = height / tan(angle). If angle is very small, shadow is?",
-    options: ["Very short", "Very long", "Equal to height", "Zero"],
-    correctAnswer: 1
-  }
+  { question: "As the sun gets higher, what happens to the shadow length?", options: ["Gets longer", "Gets shorter", "Stays same", "Disappears completely"], correctAnswer: 1 },
+  { question: "If you know the height and shadow length, you can find the sun's angle using?", options: ["sin", "cos", "tan", "cot"], correctAnswer: 2 },
+  { question: "At noon (sun directly overhead), what is the shadow length?", options: ["Maximum", "Minimum (nearly zero)", "Equal to height", "Double the height"], correctAnswer: 1 },
+  { question: "tan(angle) = height / shadow. If angle = 45°, then height equals?", options: ["Shadow × 2", "Shadow", "Shadow / 2", "Shadow²"], correctAnswer: 1 },
+  { question: "The angle of elevation is measured from?", options: ["Top of object", "The sun", "The horizontal ground", "Vertical line"], correctAnswer: 2 },
+  { question: "If shadow = height, what is the angle of elevation?", options: ["30°", "45°", "60°", "90°"], correctAnswer: 1 },
+  { question: "Shadow length = height / tan(angle). If angle is very small, shadow is?", options: ["Very short", "Very long", "Equal to height", "Zero"], correctAnswer: 1 },
+  { question: "At sunset, the sun is low. What happens to shadows?", options: ["Shortest", "Longest", "Disappear", "Same as noon"], correctAnswer: 1 },
+  { question: "A 10m pole casts a 10m shadow. What's the angle of elevation?", options: ["30°", "45°", "60°", "90°"], correctAnswer: 1 },
+  { question: "tan(60°) ≈ 1.73. If shadow = 5m, height is approximately?", options: ["2.9m", "5m", "8.65m", "10m"], correctAnswer: 2 },
+  { question: "The angle of depression is measured from?", options: ["Ground up", "Horizontal down", "Vertical line", "The shadow"], correctAnswer: 1 },
+  { question: "If height = 20m and shadow = 20m, the sun's angle is?", options: ["30°", "45°", "60°", "90°"], correctAnswer: 1 },
+  { question: "cot(angle) is the same as?", options: ["1/sin", "1/cos", "1/tan", "tan²"], correctAnswer: 2 },
+  { question: "Shadow gets longer when angle is?", options: ["Increasing", "Decreasing", "Constant", "90°"], correctAnswer: 1 },
+  { question: "A 5m tree casts a shadow of 2.5m. What's tan of the angle?", options: ["0.5", "1", "2", "2.5"], correctAnswer: 2 }
 ];
 
 function QuizPanel({ 

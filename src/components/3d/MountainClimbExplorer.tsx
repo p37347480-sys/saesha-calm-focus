@@ -10,41 +10,21 @@ interface Question {
 }
 
 const trigQuestions: Question[] = [
-  {
-    question: "In a right triangle, sin(θ) equals which ratio?",
-    options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Hypotenuse / Opposite"],
-    correctAnswer: 0
-  },
-  {
-    question: "If the angle increases, what happens to the height (opposite side)?",
-    options: ["It decreases", "It increases", "Stays the same", "Becomes negative"],
-    correctAnswer: 1
-  },
-  {
-    question: "What is cos(θ) in a right triangle?",
-    options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Adjacent / Opposite"],
-    correctAnswer: 1
-  },
-  {
-    question: "The hypotenuse is always the...",
-    options: ["Shortest side", "Longest side", "Vertical side", "Horizontal side"],
-    correctAnswer: 1
-  },
-  {
-    question: "tan(θ) = sin(θ) / cos(θ). What's another way to express tan(θ)?",
-    options: ["Adjacent / Opposite", "Hypotenuse / Adjacent", "Opposite / Adjacent", "Opposite / Hypotenuse"],
-    correctAnswer: 2
-  },
-  {
-    question: "At 45°, what is the relationship between sin and cos?",
-    options: ["sin > cos", "sin < cos", "sin = cos", "sin × cos = 1"],
-    correctAnswer: 2
-  },
-  {
-    question: "As the angle approaches 90°, what happens to tan(θ)?",
-    options: ["Approaches 0", "Approaches 1", "Approaches infinity", "Becomes negative"],
-    correctAnswer: 2
-  }
+  { question: "In a right triangle, sin(θ) equals which ratio?", options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Hypotenuse / Opposite"], correctAnswer: 0 },
+  { question: "If the angle increases, what happens to the height (opposite side)?", options: ["It decreases", "It increases", "Stays the same", "Becomes negative"], correctAnswer: 1 },
+  { question: "What is cos(θ) in a right triangle?", options: ["Opposite / Hypotenuse", "Adjacent / Hypotenuse", "Opposite / Adjacent", "Adjacent / Opposite"], correctAnswer: 1 },
+  { question: "The hypotenuse is always the...", options: ["Shortest side", "Longest side", "Vertical side", "Horizontal side"], correctAnswer: 1 },
+  { question: "tan(θ) = sin(θ) / cos(θ). What's another way to express tan(θ)?", options: ["Adjacent / Opposite", "Hypotenuse / Adjacent", "Opposite / Adjacent", "Opposite / Hypotenuse"], correctAnswer: 2 },
+  { question: "At 45°, what is the relationship between sin and cos?", options: ["sin > cos", "sin < cos", "sin = cos", "sin × cos = 1"], correctAnswer: 2 },
+  { question: "As the angle approaches 90°, what happens to tan(θ)?", options: ["Approaches 0", "Approaches 1", "Approaches infinity", "Becomes negative"], correctAnswer: 2 },
+  { question: "What is sin(30°)?", options: ["0.25", "0.5", "0.707", "0.866"], correctAnswer: 1 },
+  { question: "If sin(θ) = 0.6 and hypotenuse = 10, what is the opposite side?", options: ["4", "6", "8", "10"], correctAnswer: 1 },
+  { question: "cos(0°) equals?", options: ["0", "0.5", "1", "Undefined"], correctAnswer: 2 },
+  { question: "In SOH-CAH-TOA, what does 'TOA' stand for?", options: ["Tan = Opposite / Adjacent", "Tan = Adjacent / Opposite", "Tan = Opposite / Hypotenuse", "Tan = Adjacent / Hypotenuse"], correctAnswer: 0 },
+  { question: "What is sin(90°)?", options: ["0", "0.5", "1", "Undefined"], correctAnswer: 2 },
+  { question: "If adjacent = 4 and hypotenuse = 5, what is cos(θ)?", options: ["0.6", "0.8", "1.25", "0.75"], correctAnswer: 1 },
+  { question: "The Pythagorean theorem states that a² + b² = ?", options: ["ab", "c", "c²", "2c"], correctAnswer: 2 },
+  { question: "At what angle is tan(θ) = 1?", options: ["0°", "30°", "45°", "60°"], correctAnswer: 2 }
 ];
 
 function QuizPanel({ 
@@ -118,6 +98,23 @@ export function MountainClimbExplorer() {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-trigger question every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < trigQuestions.length) {
+        const availableQuestions = trigQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (availableQuestions.length > 0) {
+          const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+          const originalIndex = trigQuestions.indexOf(availableQuestions[randomIndex]);
+          setCurrentQuestion(availableQuestions[randomIndex]);
+          setUsedQuestions(prev => [...prev, originalIndex]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
   useEffect(() => {
     if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const availableQuestions = trigQuestions.filter((_, i) => !usedQuestions.includes(i));

@@ -10,46 +10,21 @@ interface Question {
 }
 
 const factorQuestions: Question[] = [
-  {
-    question: "x² + 5x + 6 factors to?",
-    options: ["(x+1)(x+6)", "(x+2)(x+3)", "(x+5)(x+1)", "(x-2)(x-3)"],
-    correctAnswer: 1
-  },
-  {
-    question: "What are the factors of x² - 9?",
-    options: ["(x+3)(x+3)", "(x-3)(x-3)", "(x+3)(x-3)", "(x+9)(x-1)"],
-    correctAnswer: 2
-  },
-  {
-    question: "If (x+a)(x+b) = x² + 7x + 12, what is a+b?",
-    options: ["3", "7", "12", "4"],
-    correctAnswer: 1
-  },
-  {
-    question: "x² - 5x + 6 factors to?",
-    options: ["(x-2)(x-3)", "(x+2)(x+3)", "(x-1)(x-6)", "(x+1)(x-6)"],
-    correctAnswer: 0
-  },
-  {
-    question: "The roots of (x+2)(x-5) = 0 are?",
-    options: ["x = 2, 5", "x = -2, 5", "x = 2, -5", "x = -2, -5"],
-    correctAnswer: 1
-  },
-  {
-    question: "To factor x² + bx + c, we need two numbers that?",
-    options: ["Add to b, multiply to c", "Add to c, multiply to b", "Both equal b", "Both equal c"],
-    correctAnswer: 0
-  },
-  {
-    question: "What is a² - b² called?",
-    options: ["Perfect square", "Sum of squares", "Difference of squares", "Quadratic"],
-    correctAnswer: 2
-  },
-  {
-    question: "2x² + 4x factors to?",
-    options: ["2(x² + 2x)", "2x(x + 2)", "x(2x + 4)", "Both B and C"],
-    correctAnswer: 3
-  }
+  { question: "x² + 5x + 6 factors to?", options: ["(x+1)(x+6)", "(x+2)(x+3)", "(x+5)(x+1)", "(x-2)(x-3)"], correctAnswer: 1 },
+  { question: "What are the factors of x² - 9?", options: ["(x+3)(x+3)", "(x-3)(x-3)", "(x+3)(x-3)", "(x+9)(x-1)"], correctAnswer: 2 },
+  { question: "If (x+a)(x+b) = x² + 7x + 12, what is a+b?", options: ["3", "7", "12", "4"], correctAnswer: 1 },
+  { question: "x² - 5x + 6 factors to?", options: ["(x-2)(x-3)", "(x+2)(x+3)", "(x-1)(x-6)", "(x+1)(x-6)"], correctAnswer: 0 },
+  { question: "The roots of (x+2)(x-5) = 0 are?", options: ["x = 2, 5", "x = -2, 5", "x = 2, -5", "x = -2, -5"], correctAnswer: 1 },
+  { question: "To factor x² + bx + c, we need two numbers that?", options: ["Add to b, multiply to c", "Add to c, multiply to b", "Both equal b", "Both equal c"], correctAnswer: 0 },
+  { question: "What is a² - b² called?", options: ["Perfect square", "Sum of squares", "Difference of squares", "Quadratic"], correctAnswer: 2 },
+  { question: "2x² + 4x factors to?", options: ["2(x² + 2x)", "2x(x + 2)", "x(2x + 4)", "Both B and C"], correctAnswer: 3 },
+  { question: "x² + 8x + 16 factors to?", options: ["(x+4)²", "(x+8)(x+2)", "(x-4)²", "(x+16)(x+1)"], correctAnswer: 0 },
+  { question: "What is the GCF of 6x² and 9x?", options: ["3", "3x", "6x", "x²"], correctAnswer: 1 },
+  { question: "x² - 4x - 12 factors to?", options: ["(x-6)(x+2)", "(x+6)(x-2)", "(x-4)(x-3)", "(x+4)(x-3)"], correctAnswer: 0 },
+  { question: "Which is a perfect square trinomial?", options: ["x² + 4x + 4", "x² + 5x + 6", "x² - 9", "x² + x"], correctAnswer: 0 },
+  { question: "Factor: 3x + 6", options: ["3(x + 2)", "x(3 + 6)", "3(x + 6)", "6(x + 1)"], correctAnswer: 0 },
+  { question: "x² - 16 factors to?", options: ["(x-4)²", "(x+4)(x-4)", "(x-8)(x+2)", "(x+16)(x-1)"], correctAnswer: 1 },
+  { question: "What are the roots of x² - x - 6 = 0?", options: ["x = 2, -3", "x = -2, 3", "x = 3, -2", "x = 1, 6"], correctAnswer: 2 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 

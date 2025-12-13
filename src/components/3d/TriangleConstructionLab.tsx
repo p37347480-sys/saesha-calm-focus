@@ -10,46 +10,21 @@ interface Question {
 }
 
 const triangleQuestions: Question[] = [
-  {
-    question: "What is the sum of all angles in a triangle?",
-    options: ["90°", "180°", "270°", "360°"],
-    correctAnswer: 1
-  },
-  {
-    question: "In a right triangle, which angle is always 90°?",
-    options: ["The smallest angle", "The right angle", "The largest angle", "All angles"],
-    correctAnswer: 1
-  },
-  {
-    question: "The longest side of a right triangle is called?",
-    options: ["Base", "Height", "Hypotenuse", "Adjacent"],
-    correctAnswer: 2
-  },
-  {
-    question: "If two sides of a triangle are equal, it's called?",
-    options: ["Equilateral", "Isosceles", "Scalene", "Right"],
-    correctAnswer: 1
-  },
-  {
-    question: "The Pythagorean theorem states that a² + b² = ?",
-    options: ["c", "c²", "2c", "c/2"],
-    correctAnswer: 1
-  },
-  {
-    question: "What type of triangle has all sides different?",
-    options: ["Equilateral", "Isosceles", "Scalene", "Right"],
-    correctAnswer: 2
-  },
-  {
-    question: "An angle greater than 90° is called?",
-    options: ["Acute", "Right", "Obtuse", "Reflex"],
-    correctAnswer: 2
-  },
-  {
-    question: "The side opposite to an angle in a triangle is used to calculate?",
-    options: ["Only area", "Sine of that angle", "Perimeter", "Nothing specific"],
-    correctAnswer: 1
-  }
+  { question: "What is the sum of all angles in a triangle?", options: ["90°", "180°", "270°", "360°"], correctAnswer: 1 },
+  { question: "In a right triangle, which angle is always 90°?", options: ["The smallest angle", "The right angle", "The largest angle", "All angles"], correctAnswer: 1 },
+  { question: "The longest side of a right triangle is called?", options: ["Base", "Height", "Hypotenuse", "Adjacent"], correctAnswer: 2 },
+  { question: "If two sides of a triangle are equal, it's called?", options: ["Equilateral", "Isosceles", "Scalene", "Right"], correctAnswer: 1 },
+  { question: "The Pythagorean theorem states that a² + b² = ?", options: ["c", "c²", "2c", "c/2"], correctAnswer: 1 },
+  { question: "What type of triangle has all sides different?", options: ["Equilateral", "Isosceles", "Scalene", "Right"], correctAnswer: 2 },
+  { question: "An angle greater than 90° is called?", options: ["Acute", "Right", "Obtuse", "Reflex"], correctAnswer: 2 },
+  { question: "The side opposite to an angle in a triangle is used to calculate?", options: ["Only area", "Sine of that angle", "Perimeter", "Nothing specific"], correctAnswer: 1 },
+  { question: "A triangle with all sides equal is called?", options: ["Equilateral", "Isosceles", "Scalene", "Right"], correctAnswer: 0 },
+  { question: "If a triangle has angles 60°, 60°, 60°, what type is it?", options: ["Right", "Isosceles", "Scalene", "Equilateral"], correctAnswer: 3 },
+  { question: "The area of a triangle is (base × height) / ?", options: ["1", "2", "3", "4"], correctAnswer: 1 },
+  { question: "An angle less than 90° is called?", options: ["Acute", "Right", "Obtuse", "Reflex"], correctAnswer: 0 },
+  { question: "If two angles of a triangle are 50° and 60°, the third is?", options: ["50°", "60°", "70°", "90°"], correctAnswer: 2 },
+  { question: "The perimeter of a triangle is?", options: ["Sum of all sides", "Product of all sides", "Sum of all angles", "Largest side"], correctAnswer: 0 },
+  { question: "Can a triangle have two right angles?", options: ["Yes", "No", "Sometimes", "Only isosceles"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ 

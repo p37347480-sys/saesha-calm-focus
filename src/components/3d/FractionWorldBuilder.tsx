@@ -10,46 +10,21 @@ interface Question {
 }
 
 const fractionQuestions: Question[] = [
-  {
-    question: "If a pizza is cut into 8 equal slices and you eat 2, what fraction did you eat?",
-    options: ["1/4", "2/8", "1/2", "Both 1/4 and 2/8"],
-    correctAnswer: 3
-  },
-  {
-    question: "Which fraction is equivalent to 1/2?",
-    options: ["2/3", "3/6", "1/3", "4/6"],
-    correctAnswer: 1
-  },
-  {
-    question: "If you have 3/4 of a pie, how much more do you need to have a whole pie?",
-    options: ["1/2", "1/3", "1/4", "2/4"],
-    correctAnswer: 2
-  },
-  {
-    question: "Which is bigger: 1/3 or 1/4?",
-    options: ["1/3", "1/4", "They're equal", "Cannot compare"],
-    correctAnswer: 0
-  },
-  {
-    question: "What do you get when you combine 1/4 + 1/4?",
-    options: ["2/8", "1/2", "1/4", "2/4"],
-    correctAnswer: 1
-  },
-  {
-    question: "A shape divided into 6 equal parts with 2 shaded represents?",
-    options: ["2/6 or 1/3", "2/3", "1/2", "4/6"],
-    correctAnswer: 0
-  },
-  {
-    question: "If you split 1/2 into two equal parts, each part is?",
-    options: ["1/3", "1/4", "1/2", "2/4"],
-    correctAnswer: 1
-  },
-  {
-    question: "3/3 equals how much of a whole?",
-    options: ["Half", "One third", "One whole", "Three wholes"],
-    correctAnswer: 2
-  }
+  { question: "If a pizza is cut into 8 equal slices and you eat 2, what fraction did you eat?", options: ["1/4", "2/8", "1/2", "Both 1/4 and 2/8"], correctAnswer: 3 },
+  { question: "Which fraction is equivalent to 1/2?", options: ["2/3", "3/6", "1/3", "4/6"], correctAnswer: 1 },
+  { question: "If you have 3/4 of a pie, how much more do you need to have a whole pie?", options: ["1/2", "1/3", "1/4", "2/4"], correctAnswer: 2 },
+  { question: "Which is bigger: 1/3 or 1/4?", options: ["1/3", "1/4", "They're equal", "Cannot compare"], correctAnswer: 0 },
+  { question: "What do you get when you combine 1/4 + 1/4?", options: ["2/8", "1/2", "1/4", "2/4"], correctAnswer: 1 },
+  { question: "A shape divided into 6 equal parts with 2 shaded represents?", options: ["2/6 or 1/3", "2/3", "1/2", "4/6"], correctAnswer: 0 },
+  { question: "If you split 1/2 into two equal parts, each part is?", options: ["1/3", "1/4", "1/2", "2/4"], correctAnswer: 1 },
+  { question: "3/3 equals how much of a whole?", options: ["Half", "One third", "One whole", "Three wholes"], correctAnswer: 2 },
+  { question: "What is 1/4 + 2/4?", options: ["3/8", "3/4", "1/2", "2/4"], correctAnswer: 1 },
+  { question: "Which fraction is smallest: 1/2, 1/3, or 1/4?", options: ["1/2", "1/3", "1/4", "All equal"], correctAnswer: 2 },
+  { question: "5/8 of a pizza is eaten. What fraction remains?", options: ["3/8", "2/8", "5/8", "1/8"], correctAnswer: 0 },
+  { question: "How many sixths equal one half?", options: ["2/6", "3/6", "4/6", "1/6"], correctAnswer: 1 },
+  { question: "What is 2/5 + 2/5?", options: ["4/10", "4/5", "2/5", "1/5"], correctAnswer: 1 },
+  { question: "Which is larger: 2/3 or 3/4?", options: ["2/3", "3/4", "They're equal", "Cannot tell"], correctAnswer: 1 },
+  { question: "A bar is divided into 10 parts, 7 are shaded. What fraction is unshaded?", options: ["7/10", "3/10", "3/7", "7/3"], correctAnswer: 1 }
 ];
 
 function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
@@ -246,8 +221,25 @@ export function FractionWorldBuilder() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
   useEffect(() => {
-    if (interactionCount > 0 && interactionCount % 3 === 0 && !currentQuestion) {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < fractionQuestions.length) {
+        const available = fractionQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = fractionQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = fractionQuestions.filter((_, i) => !usedQuestions.includes(i));
       if (available.length > 0) {
         const randomIdx = Math.floor(Math.random() * available.length);
