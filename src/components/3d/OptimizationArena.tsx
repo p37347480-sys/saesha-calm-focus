@@ -1,7 +1,32 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const optimizationQuestions: Question[] = [
+  { question: "For fixed volume, which shape has minimum surface area?", options: ["Cube", "Sphere", "Cylinder", "Cone"], correctAnswer: 1 },
+  { question: "To maximize volume with fixed surface area, use?", options: ["Long thin shape", "Compact shape", "Flat shape", "Any shape"], correctAnswer: 1 },
+  { question: "A cube is optimal when?", options: ["Never", "All sides equal", "Height > width", "Height < width"], correctAnswer: 1 },
+  { question: "For packaging, efficiency means?", options: ["Maximum volume, minimum surface", "Minimum volume, maximum surface", "Equal volume and surface", "Neither"], correctAnswer: 0 },
+  { question: "If you double all dimensions, surface area increases by?", options: ["2x", "4x", "8x", "16x"], correctAnswer: 1 },
+  { question: "If you double all dimensions, volume increases by?", options: ["2x", "4x", "8x", "16x"], correctAnswer: 2 },
+  { question: "Ratio of surface area to volume is called?", options: ["Surface ratio", "Volume ratio", "SA:V ratio", "Dimension ratio"], correctAnswer: 2 },
+  { question: "As objects get larger, SA:V ratio?", options: ["Increases", "Decreases", "Stays same", "Varies randomly"], correctAnswer: 1 },
+  { question: "Optimal cylinder (min SA for fixed V) has h:d ratio of?", options: ["1:1", "2:1", "1:2", "3:1"], correctAnswer: 0 },
+  { question: "Why do cells stay small?", options: ["SA:V ratio", "Weight", "Color", "Shape"], correctAnswer: 0 },
+  { question: "A sphere's efficiency comes from having?", options: ["No edges", "No corners", "Minimum SA for V", "All of these"], correctAnswer: 3 },
+  { question: "For a box with volume 27, minimum SA needs sides of?", options: ["1,1,27", "3,3,3", "9,3,1", "27,1,1"], correctAnswer: 1 },
+  { question: "Optimization problems often involve?", options: ["Maximizing or minimizing", "Adding only", "Subtracting only", "Multiplying only"], correctAnswer: 0 },
+  { question: "Efficiency increases when shape is more?", options: ["Irregular", "Symmetrical", "Flat", "Long"], correctAnswer: 1 },
+  { question: "Real-world example of SA:V optimization?", options: ["Building design", "Package design", "Animal cells", "All of these"], correctAnswer: 3 }
+];
 
 function OptimizableBox({ 
   dimensions, 
@@ -233,6 +258,48 @@ function EfficiencyGauge({ value, position }: { value: number; position: [number
 
 export function OptimizationArena() {
   const [dimensions, setDimensions] = useState({ width: 1.5, height: 1.5, depth: 1.5 });
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
+
+  // Auto-trigger question every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < optimizationQuestions.length) {
+        const available = optimizationQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = optimizationQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
+      const available = optimizationQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (available.length > 0) {
+        const randomIdx = Math.floor(Math.random() * available.length);
+        const originalIdx = optimizationQuestions.indexOf(available[randomIdx]);
+        setCurrentQuestion(available[randomIdx]);
+        setUsedQuestions(prev => [...prev, originalIdx]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
   
   const volume = dimensions.width * dimensions.height * dimensions.depth;
   const surfaceArea = 2 * (
@@ -247,12 +314,28 @@ export function OptimizationArena() {
   const cubeSurfaceArea = 6 * cubeEdge * cubeEdge;
   const efficiency = Math.min(cubeSurfaceArea / surfaceArea, 1);
 
+  const handleDimensionChange = (dim: 'width' | 'height' | 'depth', value: number) => {
+    setDimensions(d => ({ ...d, [dim]: value }));
+    setInteractionCount(prev => prev + 1);
+  };
+
   return (
     <>
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 5, -5]} intensity={0.5} color="#a855f7" />
       <pointLight position={[5, 5, 5]} intensity={0.5} color="#3b82f6" />
+
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+          emoji="🎯"
+          title="Optimization Quiz"
+        />
+      </Html>
 
       {/* Arena Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
@@ -277,7 +360,7 @@ export function OptimizationArena() {
           min={0.5} 
           max={3}
           position={[0, 1, 0]}
-          onChange={(v) => setDimensions(d => ({ ...d, width: v }))}
+          onChange={(v) => handleDimensionChange('width', v)}
           color="#ef4444"
         />
         <ControlSlider 
@@ -286,7 +369,7 @@ export function OptimizationArena() {
           min={0.5} 
           max={3}
           position={[0, 0, 0]}
-          onChange={(v) => setDimensions(d => ({ ...d, height: v }))}
+          onChange={(v) => handleDimensionChange('height', v)}
           color="#22c55e"
         />
         <ControlSlider 
@@ -295,7 +378,7 @@ export function OptimizationArena() {
           min={0.5} 
           max={3}
           position={[0, -1, 0]}
-          onChange={(v) => setDimensions(d => ({ ...d, depth: v }))}
+          onChange={(v) => handleDimensionChange('depth', v)}
           color="#3b82f6"
         />
       </group>

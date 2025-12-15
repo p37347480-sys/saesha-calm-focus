@@ -1,7 +1,32 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const compositeQuestions: Question[] = [
+  { question: "Volume of composite solid = ?", options: ["Sum of volumes", "Difference of volumes", "Product of volumes", "Average of volumes"], correctAnswer: 0 },
+  { question: "A cube on top of a cylinder creates?", options: ["Prism", "Composite solid", "Pyramid", "Cone"], correctAnswer: 1 },
+  { question: "To find surface area of composite, you must?", options: ["Add all surfaces", "Subtract hidden surfaces", "Both A and B", "Multiply surfaces"], correctAnswer: 2 },
+  { question: "Hemisphere + cylinder = ?", options: ["Capsule shape", "Cone", "Cube", "Pyramid"], correctAnswer: 0 },
+  { question: "If cube has side 2, and cone has radius 1, height 2, total volume is?", options: ["8 + 2π/3", "8 + 4π/3", "4 + 2π/3", "8 + 2π"], correctAnswer: 0 },
+  { question: "What is removed when shapes touch?", options: ["Volume", "Contact surfaces", "Nothing", "Weight"], correctAnswer: 1 },
+  { question: "Cylinder (r=1,h=2) + hemisphere (r=1) volume?", options: ["2π + 2π/3", "4π", "π + π/3", "3π"], correctAnswer: 0 },
+  { question: "Which combination creates a house shape?", options: ["Cube + cylinder", "Prism + pyramid", "Sphere + cone", "Cylinder + cone"], correctAnswer: 1 },
+  { question: "Ice cream cone shape is?", options: ["Cone + hemisphere", "Cone + sphere", "Cylinder + cone", "Cone + cylinder"], correctAnswer: 0 },
+  { question: "A silo is shaped like?", options: ["Cube + cone", "Cylinder + hemisphere", "Cylinder + cone", "Prism + pyramid"], correctAnswer: 2 },
+  { question: "What's the volume of a cube with a cylindrical hole?", options: ["Cube - cylinder", "Cube + cylinder", "Cube × cylinder", "Cube ÷ cylinder"], correctAnswer: 0 },
+  { question: "Two cubes stacked have combined surface area of?", options: ["12 faces", "10 faces", "8 faces", "6 faces"], correctAnswer: 1 },
+  { question: "Cone (r=2,h=3) volume is?", options: ["4π", "12π", "2π", "6π"], correctAnswer: 0 },
+  { question: "A rocket shape is made of?", options: ["Cylinder + cone", "Sphere + cone", "Cube + pyramid", "All cylinders"], correctAnswer: 0 },
+  { question: "When subtracting shapes, volume is?", options: ["Always smaller", "Always larger", "Same", "Depends"], correctAnswer: 0 }
+];
 
 type ShapeType = 'cube' | 'cylinder' | 'cone' | 'sphere';
 
@@ -211,6 +236,48 @@ export function CompositeSolidsBuilder() {
   const [placedShapes, setPlacedShapes] = useState<PlacedShape[]>([]);
   const [selectedPlaced, setSelectedPlaced] = useState<number | null>(null);
   const nextId = useRef(0);
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
+
+  // Auto-trigger question every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < compositeQuestions.length) {
+        const available = compositeQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = compositeQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
+      const available = compositeQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (available.length > 0) {
+        const randomIdx = Math.floor(Math.random() * available.length);
+        const originalIdx = compositeQuestions.indexOf(available[randomIdx]);
+        setCurrentQuestion(available[randomIdx]);
+        setUsedQuestions(prev => [...prev, originalIdx]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
 
   const shapeColors: Record<ShapeType, string> = {
     cube: '#ef4444',
@@ -221,6 +288,7 @@ export function CompositeSolidsBuilder() {
 
   const addShape = (position: [number, number, number]) => {
     if (!selectedTool) return;
+    setInteractionCount(prev => prev + 1);
     setPlacedShapes(prev => [...prev, {
       type: selectedTool,
       position,
@@ -232,11 +300,13 @@ export function CompositeSolidsBuilder() {
   const removeShape = (id: number) => {
     setPlacedShapes(prev => prev.filter(s => s.id !== id));
     setSelectedPlaced(null);
+    setInteractionCount(prev => prev + 1);
   };
 
   const clearAll = () => {
     setPlacedShapes([]);
     setSelectedPlaced(null);
+    setInteractionCount(prev => prev + 1);
   };
 
   const calculateVolume = (type: ShapeType) => {
@@ -256,6 +326,17 @@ export function CompositeSolidsBuilder() {
       <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
       <pointLight position={[-5, 5, -5]} intensity={0.5} color="#a855f7" />
       <pointLight position={[5, 5, 5]} intensity={0.5} color="#22c55e" />
+
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+          emoji="🧊"
+          title="Composite Solids Quiz"
+        />
+      </Html>
 
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
 
 interface Question {
   question: string;
@@ -26,36 +27,6 @@ const equationQuestions: Question[] = [
   { question: "Solve: x + x + x = 15", options: ["x = 3", "x = 5", "x = 15", "x = 45"], correctAnswer: 1 },
   { question: "In the equation 7x = 49, x equals?", options: ["6", "7", "8", "42"], correctAnswer: 1 }
 ];
-
-function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
-  currentQuestion: Question | null;
-  onAnswer: (index: number) => void;
-  score: number;
-  totalQuestions: number;
-}) {
-  if (!currentQuestion) return null;
-
-  return (
-    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-sm font-medium text-primary">⚖️ Equation Quiz</span>
-        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
-      </div>
-      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
-      <div className="space-y-2">
-        {currentQuestion.options.map((option, index) => (
-          <button
-            key={index}
-            onClick={() => onAnswer(index)}
-            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // Draggable weight
 function Weight({ 
@@ -271,8 +242,25 @@ export function EquationBalancer() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
   useEffect(() => {
-    if (interactionCount > 0 && interactionCount % 3 === 0 && !currentQuestion) {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < equationQuestions.length) {
+        const available = equationQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = equationQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = equationQuestions.filter((_, i) => !usedQuestions.includes(i));
       if (available.length > 0) {
         const randomIdx = Math.floor(Math.random() * available.length);
@@ -283,8 +271,8 @@ export function EquationBalancer() {
     }
   }, [interactionCount]);
 
-  const handleAnswer = (selectedIndex: number) => {
-    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
     setQuestionsAnswered(prev => prev + 1);
@@ -305,6 +293,8 @@ export function EquationBalancer() {
           onAnswer={handleAnswer}
           score={score}
           totalQuestions={questionsAnswered}
+          emoji="⚖️"
+          title="Equation Quiz"
         />
       </Html>
 

@@ -1,7 +1,32 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
+
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+const volumeQuestions: Question[] = [
+  { question: "Volume of a cube with side 3 is?", options: ["9", "18", "27", "12"], correctAnswer: 2 },
+  { question: "Formula for cylinder volume is?", options: ["πr²h", "2πrh", "πr²", "4/3πr³"], correctAnswer: 0 },
+  { question: "If you double the radius of a sphere, volume becomes?", options: ["2x", "4x", "8x", "16x"], correctAnswer: 2 },
+  { question: "Surface area of a cube with side 2 is?", options: ["8", "12", "16", "24"], correctAnswer: 3 },
+  { question: "Volume of a cone is what fraction of a cylinder?", options: ["1/2", "1/3", "1/4", "2/3"], correctAnswer: 1 },
+  { question: "A sphere has radius 2. What is its volume?", options: ["8π/3", "16π/3", "32π/3", "4π"], correctAnswer: 2 },
+  { question: "Which shape has the largest volume for same surface area?", options: ["Cube", "Sphere", "Cylinder", "Cone"], correctAnswer: 1 },
+  { question: "Volume of rectangular prism 2×3×4 is?", options: ["9", "14", "24", "20"], correctAnswer: 2 },
+  { question: "Surface area formula for sphere is?", options: ["πr²", "2πr²", "4πr²", "πr³"], correctAnswer: 2 },
+  { question: "If height of cylinder doubles, volume?", options: ["Stays same", "Doubles", "Quadruples", "Halves"], correctAnswer: 1 },
+  { question: "Cone with radius 3, height 4 has volume?", options: ["12π", "36π", "4π", "9π"], correctAnswer: 0 },
+  { question: "Which has more surface area: cube or sphere of same volume?", options: ["Cube", "Sphere", "Same", "Depends"], correctAnswer: 0 },
+  { question: "Volume units are always?", options: ["Squared", "Cubed", "Linear", "Constant"], correctAnswer: 1 },
+  { question: "Hemisphere volume formula is?", options: ["4/3πr³", "2/3πr³", "1/2πr²h", "πr²"], correctAnswer: 1 },
+  { question: "A cube has volume 64. What is its side?", options: ["4", "8", "16", "32"], correctAnswer: 0 }
+];
 
 function InteractiveShape({ 
   shape, 
@@ -158,6 +183,48 @@ export function ShapeTransformationLab() {
     { type: 'sphere' as const, scale: [1, 1, 1] as [number, number, number], color: '#3b82f6' },
     { type: 'cone' as const, scale: [1, 1, 1] as [number, number, number], color: '#f59e0b' },
   ]);
+  const [interactionCount, setInteractionCount] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [score, setScore] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
+
+  // Auto-trigger question every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < volumeQuestions.length) {
+        const available = volumeQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = volumeQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
+  useEffect(() => {
+    if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
+      const available = volumeQuestions.filter((_, i) => !usedQuestions.includes(i));
+      if (available.length > 0) {
+        const randomIdx = Math.floor(Math.random() * available.length);
+        const originalIdx = volumeQuestions.indexOf(available[randomIdx]);
+        setCurrentQuestion(available[randomIdx]);
+        setUsedQuestions(prev => [...prev, originalIdx]);
+      }
+    }
+  }, [interactionCount]);
+
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    setQuestionsAnswered(prev => prev + 1);
+    setCurrentQuestion(null);
+  };
 
   const calculateVolume = (index: number) => {
     const shape = shapes[index];
@@ -185,6 +252,7 @@ export function ShapeTransformationLab() {
 
   const modifyShape = (dimension: 'width' | 'height', delta: number) => {
     if (selectedShape === null) return;
+    setInteractionCount(prev => prev + 1);
     setShapes(prev => prev.map((shape, i) => {
       if (i !== selectedShape) return shape;
       const newScale = [...shape.scale] as [number, number, number];
@@ -207,6 +275,17 @@ export function ShapeTransformationLab() {
       <pointLight position={[-5, 5, -5]} intensity={0.5} color="#a855f7" />
       <pointLight position={[5, 5, 5]} intensity={0.5} color="#3b82f6" />
 
+      <Html fullscreen>
+        <QuizPanel 
+          currentQuestion={currentQuestion}
+          onAnswer={handleAnswer}
+          score={score}
+          totalQuestions={questionsAnswered}
+          emoji="📐"
+          title="Volume Quiz"
+        />
+      </Html>
+
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
@@ -222,7 +301,10 @@ export function ShapeTransformationLab() {
             position={positions[index]}
             baseColor={shape.color}
             isSelected={selectedShape === index}
-            onClick={() => setSelectedShape(selectedShape === index ? null : index)}
+            onClick={() => {
+              setSelectedShape(selectedShape === index ? null : index);
+              setInteractionCount(prev => prev + 1);
+            }}
           />
           <Text position={[positions[index][0], -1.5, positions[index][2]]} fontSize={0.2} color="#ffffff" anchorX="center">
             {shape.type.charAt(0).toUpperCase() + shape.type.slice(1)}
