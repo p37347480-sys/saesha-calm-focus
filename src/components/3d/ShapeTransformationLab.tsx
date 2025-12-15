@@ -42,19 +42,28 @@ function InteractiveShape({
   onClick: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [scale, setScale] = useState<[number, number, number]>([1, 1, 1]);
 
   useFrame((state) => {
     if (meshRef.current) {
+      const time = state.clock.elapsedTime;
       if (isSelected) {
-        meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
-        const pulse = 1 + Math.sin(state.clock.elapsedTime * 3) * 0.05;
+        meshRef.current.rotation.y = time * 1.5;
+        const pulse = 1 + Math.sin(time * 4) * 0.08;
         meshRef.current.scale.set(scale[0] * pulse, scale[1] * pulse, scale[2] * pulse);
+      } else if (hovered) {
+        meshRef.current.rotation.y = time * 0.8;
+        meshRef.current.scale.set(scale[0] * 1.1, scale[1] * 1.1, scale[2] * 1.1);
       } else {
-        meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+        meshRef.current.rotation.y = time * 0.15;
         meshRef.current.scale.set(scale[0], scale[1], scale[2]);
       }
+    }
+    if (glowRef.current && (isSelected || hovered)) {
+      const glow = Math.sin(state.clock.elapsedTime * 5) * 0.1 + 1.25;
+      glowRef.current.scale.setScalar(glow);
     }
   });
 
@@ -80,6 +89,17 @@ function InteractiveShape({
 
   return (
     <group position={position}>
+      {/* Glow effect */}
+      {(isSelected || hovered) && (
+        <mesh ref={glowRef}>
+          {getGeometry()}
+          <meshBasicMaterial 
+            color={isSelected ? '#fbbf24' : '#a855f7'} 
+            transparent 
+            opacity={0.15} 
+          />
+        </mesh>
+      )}
       <mesh
         ref={meshRef}
         onClick={handleClick}
@@ -88,19 +108,26 @@ function InteractiveShape({
       >
         {getGeometry()}
         <meshStandardMaterial 
-          color={isSelected ? '#fbbf24' : hovered ? '#a855f7' : baseColor} 
+          color={isSelected ? '#fbbf24' : hovered ? '#c084fc' : baseColor} 
           transparent 
-          opacity={0.9}
-          metalness={0.4}
-          roughness={0.3}
+          opacity={0.95}
+          metalness={0.6}
+          roughness={0.2}
           emissive={isSelected ? '#fbbf24' : hovered ? '#a855f7' : baseColor}
-          emissiveIntensity={isSelected ? 0.3 : hovered ? 0.2 : 0.1}
+          emissiveIntensity={isSelected ? 0.5 : hovered ? 0.4 : 0.15}
         />
       </mesh>
       {isSelected && (
-        <mesh scale={1.2}>
+        <mesh scale={1.25}>
           {getGeometry()}
-          <meshBasicMaterial color="#fbbf24" transparent opacity={0.15} wireframe />
+          <meshBasicMaterial color="#fbbf24" transparent opacity={0.2} wireframe />
+        </mesh>
+      )}
+      {/* Selection indicator ring */}
+      {isSelected && (
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.8, 0]}>
+          <torusGeometry args={[0.7, 0.03, 8, 32]} />
+          <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.8} />
         </mesh>
       )}
     </group>
@@ -119,22 +146,40 @@ function ControlButton({
   color?: string;
 }) {
   const [hovered, setHovered] = useState(false);
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (meshRef.current && hovered) {
+      const pulse = Math.sin(state.clock.elapsedTime * 6) * 0.05 + 1;
+      meshRef.current.scale.setScalar(pulse);
+    }
+  });
 
   return (
     <group position={position}>
+      {/* Glow behind button */}
+      {hovered && (
+        <mesh scale={1.4}>
+          <boxGeometry args={[1.2, 0.4, 0.2]} />
+          <meshBasicMaterial color={color} transparent opacity={0.2} />
+        </mesh>
+      )}
       <mesh
+        ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
         onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
       >
         <boxGeometry args={[1.2, 0.4, 0.2]} />
         <meshStandardMaterial 
-          color={hovered ? '#a855f7' : color} 
-          emissive={hovered ? '#a855f7' : color}
-          emissiveIntensity={hovered ? 0.4 : 0.2}
+          color={hovered ? '#fbbf24' : color} 
+          emissive={hovered ? '#fbbf24' : color}
+          emissiveIntensity={hovered ? 0.6 : 0.25}
+          metalness={0.7}
+          roughness={0.2}
         />
       </mesh>
-      <Text position={[0, 0, 0.15]} fontSize={0.15} color="#ffffff" anchorX="center" anchorY="middle">
+      <Text position={[0, 0, 0.15]} fontSize={0.18} color="#ffffff" anchorX="center" anchorY="middle">
         {label}
       </Text>
     </group>
