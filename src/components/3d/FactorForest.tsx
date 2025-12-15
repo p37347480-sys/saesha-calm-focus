@@ -28,7 +28,7 @@ const factorQuestions: Question[] = [
   { question: "What are the roots of x² - x - 6 = 0?", options: ["x = 2, -3", "x = -2, 3", "x = 3, -2", "x = 1, 6"], correctAnswer: 2 }
 ];
 
-// Interactive factoring tree
+// Enhanced interactive factoring tree with better animations
 function FactorTree({ 
   expression, 
   factors,
@@ -43,97 +43,142 @@ function FactorTree({
   onClick: () => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  const crownRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
     if (groupRef.current) {
       groupRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.3) * 0.02;
+      if (hovered) {
+        groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, 1.1, 0.1));
+      } else {
+        groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, 1, 0.1));
+      }
+    }
+    if (crownRef.current) {
+      const pulse = isExpanded ? Math.sin(state.clock.elapsedTime * 4) * 0.1 + 1 : 1;
+      crownRef.current.scale.setScalar(pulse);
     }
   });
 
   return (
-    <group ref={groupRef} position={position} onClick={onClick}>
-      {/* Main trunk (expression) */}
+    <group 
+      ref={groupRef} 
+      position={position} 
+      onClick={onClick}
+      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+    >
+      {/* Main trunk (expression) with bark texture effect */}
       <mesh position={[0, 1.5, 0]}>
         <cylinderGeometry args={[0.25, 0.35, 3, 12]} />
-        <meshStandardMaterial color="#92400e" roughness={0.8} />
+        <meshStandardMaterial 
+          color={hovered ? '#b45309' : '#92400e'} 
+          roughness={0.8}
+          emissive="#92400e"
+          emissiveIntensity={hovered ? 0.2 : 0}
+        />
       </mesh>
       
-      {/* Expression crown */}
-      <Float speed={1} floatIntensity={0.1}>
-        <mesh position={[0, 3.2, 0]}>
-          <sphereGeometry args={[0.6, 16, 16]} />
-          <meshStandardMaterial 
-            color="#22c55e"
-            emissive="#22c55e"
-            emissiveIntensity={0.3}
-          />
-        </mesh>
+      {/* Expression crown with enhanced glow */}
+      <Float speed={1.5} floatIntensity={0.15}>
+        <group position={[0, 3.2, 0]}>
+          <mesh ref={crownRef}>
+            <sphereGeometry args={[0.6, 24, 24]} />
+            <meshStandardMaterial 
+              color={isExpanded ? '#4ade80' : '#22c55e'}
+              emissive={isExpanded ? '#4ade80' : '#22c55e'}
+              emissiveIntensity={isExpanded ? 0.6 : 0.3}
+              metalness={0.3}
+              roughness={0.4}
+            />
+          </mesh>
+          {/* Outer glow ring */}
+          {(hovered || isExpanded) && (
+            <mesh>
+              <sphereGeometry args={[0.75, 16, 16]} />
+              <meshBasicMaterial color="#4ade80" transparent opacity={0.2} />
+            </mesh>
+          )}
+        </group>
       </Float>
       
-      {/* Factor branches */}
+      {/* Factor branches with smooth animation */}
       {isExpanded && (
         <>
-          {/* Left branch and root */}
+          {/* Left branch and root with enhanced visuals */}
           <mesh position={[-0.6, 0.5, 0]} rotation={[0, 0, 0.5]}>
             <cylinderGeometry args={[0.08, 0.12, 1.5, 8]} />
-            <meshStandardMaterial color="#a16207" roughness={0.7} />
+            <meshStandardMaterial color="#a16207" roughness={0.7} emissive="#a16207" emissiveIntensity={0.1} />
           </mesh>
-          <Float speed={1.5} floatIntensity={0.2}>
-            <mesh position={[-1.2, -0.5, 0.5]}>
-              <dodecahedronGeometry args={[0.4]} />
-              <meshStandardMaterial
-                color="#a855f7"
-                metalness={0.8}
-                roughness={0.2}
-                emissive="#a855f7"
-                emissiveIntensity={0.6}
-              />
-            </mesh>
+          <Float speed={2} floatIntensity={0.3}>
+            <group position={[-1.2, -0.5, 0.5]}>
+              <mesh>
+                <dodecahedronGeometry args={[0.45]} />
+                <meshStandardMaterial
+                  color="#a855f7"
+                  metalness={0.9}
+                  roughness={0.1}
+                  emissive="#a855f7"
+                  emissiveIntensity={0.7}
+                />
+              </mesh>
+              <mesh scale={1.3}>
+                <dodecahedronGeometry args={[0.45]} />
+                <meshBasicMaterial color="#a855f7" transparent opacity={0.15} wireframe />
+              </mesh>
+            </group>
           </Float>
           
-          {/* Right branch and root */}
+          {/* Right branch and root with enhanced visuals */}
           <mesh position={[0.6, 0.5, 0]} rotation={[0, 0, -0.5]}>
             <cylinderGeometry args={[0.08, 0.12, 1.5, 8]} />
-            <meshStandardMaterial color="#a16207" roughness={0.7} />
+            <meshStandardMaterial color="#a16207" roughness={0.7} emissive="#a16207" emissiveIntensity={0.1} />
           </mesh>
-          <Float speed={1.5} floatIntensity={0.2}>
-            <mesh position={[1.2, -0.5, 0.5]}>
-              <dodecahedronGeometry args={[0.4]} />
-              <meshStandardMaterial
-                color="#ec4899"
-                metalness={0.8}
-                roughness={0.2}
-                emissive="#ec4899"
-                emissiveIntensity={0.6}
-              />
-            </mesh>
+          <Float speed={2} floatIntensity={0.3}>
+            <group position={[1.2, -0.5, 0.5]}>
+              <mesh>
+                <dodecahedronGeometry args={[0.45]} />
+                <meshStandardMaterial
+                  color="#ec4899"
+                  metalness={0.9}
+                  roughness={0.1}
+                  emissive="#ec4899"
+                  emissiveIntensity={0.7}
+                />
+              </mesh>
+              <mesh scale={1.3}>
+                <dodecahedronGeometry args={[0.45]} />
+                <meshBasicMaterial color="#ec4899" transparent opacity={0.15} wireframe />
+              </mesh>
+            </group>
           </Float>
           
-          {/* Root connections with glow */}
+          {/* Energy connection beams */}
           <mesh position={[-0.6, -0.2, 0.3]} rotation={[0, 0, 0.3]}>
-            <cylinderGeometry args={[0.05, 0.08, 1, 8]} />
-            <meshStandardMaterial color="#713f12" emissive="#a855f7" emissiveIntensity={0.3} />
+            <cylinderGeometry args={[0.03, 0.06, 1, 8]} />
+            <meshStandardMaterial color="#e879f9" emissive="#a855f7" emissiveIntensity={0.8} />
           </mesh>
           <mesh position={[0.6, -0.2, 0.3]} rotation={[0, 0, -0.3]}>
-            <cylinderGeometry args={[0.05, 0.08, 1, 8]} />
-            <meshStandardMaterial color="#713f12" emissive="#ec4899" emissiveIntensity={0.3} />
+            <cylinderGeometry args={[0.03, 0.06, 1, 8]} />
+            <meshStandardMaterial color="#f472b6" emissive="#ec4899" emissiveIntensity={0.8} />
           </mesh>
         </>
       )}
       
-      {/* Decorative leaves */}
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <Float key={i} speed={2} floatIntensity={0.3}>
+      {/* Animated decorative leaves */}
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <Float key={i} speed={2 + i * 0.2} floatIntensity={0.4}>
           <mesh position={[
-            Math.cos((i / 6) * Math.PI * 2) * 0.8,
-            2.5 + Math.sin(i * 0.5) * 0.3,
-            Math.sin((i / 6) * Math.PI * 2) * 0.8
+            Math.cos((i / 8) * Math.PI * 2) * 0.9,
+            2.5 + Math.sin(i * 0.7) * 0.4,
+            Math.sin((i / 8) * Math.PI * 2) * 0.9
           ]}>
-            <sphereGeometry args={[0.25, 12, 12]} />
+            <sphereGeometry args={[0.2 + Math.random() * 0.1, 12, 12]} />
             <meshStandardMaterial
-              color="#22c55e"
-              emissive="#22c55e"
-              emissiveIntensity={0.2}
+              color={i % 2 === 0 ? '#22c55e' : '#4ade80'}
+              emissive={i % 2 === 0 ? '#22c55e' : '#4ade80'}
+              emissiveIntensity={0.3}
             />
           </mesh>
         </Float>
@@ -142,14 +187,24 @@ function FactorTree({
   );
 }
 
-// Common factor extractor
+// Enhanced common factor extractor machine
 function CommonFactorMachine({ position, onClick }: { position: [number, number, number]; onClick: () => void }) {
   const machineRef = useRef<THREE.Group>(null);
   const [isActive, setIsActive] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const ringRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
-    if (machineRef.current && isActive) {
-      machineRef.current.rotation.y = state.clock.elapsedTime * 2;
+    if (machineRef.current) {
+      if (isActive) {
+        machineRef.current.rotation.y = state.clock.elapsedTime * 3;
+      } else if (hovered) {
+        machineRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+      }
+    }
+    if (ringRef.current) {
+      const pulse = Math.sin(state.clock.elapsedTime * 4) * 0.1 + 1;
+      ringRef.current.scale.setScalar(pulse);
     }
   });
 
@@ -159,45 +214,82 @@ function CommonFactorMachine({ position, onClick }: { position: [number, number,
   };
 
   return (
-    <group ref={machineRef} position={position} onClick={handleClick}>
-      {/* Base */}
+    <group 
+      ref={machineRef} 
+      position={position} 
+      onClick={handleClick}
+      onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+    >
+      {/* Base with metallic sheen */}
       <mesh position={[0, 0.15, 0]}>
-        <cylinderGeometry args={[0.8, 1, 0.3, 16]} />
-        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-      </mesh>
-      
-      {/* Extraction funnel */}
-      <mesh position={[0, 0.8, 0]}>
-        <coneGeometry args={[0.6, 1, 16, 1, true]} />
+        <cylinderGeometry args={[0.9, 1.1, 0.35, 20]} />
         <meshStandardMaterial 
-          color="#3b82f6"
-          transparent
-          opacity={0.6}
-          side={THREE.DoubleSide}
+          color={hovered ? '#64748b' : '#475569'} 
+          metalness={0.9} 
+          roughness={0.15}
+          emissive="#475569"
+          emissiveIntensity={hovered ? 0.2 : 0}
         />
       </mesh>
       
-      {/* Output tubes */}
+      {/* Extraction funnel with glow */}
+      <mesh position={[0, 0.8, 0]}>
+        <coneGeometry args={[0.7, 1.1, 20, 1, true]} />
+        <meshStandardMaterial 
+          color={isActive ? '#60a5fa' : '#3b82f6'}
+          transparent
+          opacity={isActive ? 0.8 : 0.6}
+          side={THREE.DoubleSide}
+          emissive="#3b82f6"
+          emissiveIntensity={isActive ? 0.5 : 0.2}
+        />
+      </mesh>
+      
+      {/* Output tubes with enhanced effects */}
       {[-0.5, 0.5].map((x, i) => (
-        <mesh key={i} position={[x, -0.2, 0]} rotation={[0, 0, x > 0 ? 0.3 : -0.3]}>
-          <cylinderGeometry args={[0.1, 0.15, 0.6, 8]} />
-          <meshStandardMaterial 
-            color={i === 0 ? '#a855f7' : '#ec4899'}
-            emissive={i === 0 ? '#a855f7' : '#ec4899'}
-            emissiveIntensity={isActive ? 0.6 : 0.2}
-          />
-        </mesh>
+        <group key={i}>
+          <mesh position={[x, -0.2, 0]} rotation={[0, 0, x > 0 ? 0.3 : -0.3]}>
+            <cylinderGeometry args={[0.12, 0.18, 0.7, 12]} />
+            <meshStandardMaterial 
+              color={i === 0 ? '#a855f7' : '#ec4899'}
+              emissive={i === 0 ? '#a855f7' : '#ec4899'}
+              emissiveIntensity={isActive ? 0.8 : 0.3}
+              metalness={0.8}
+            />
+          </mesh>
+          {isActive && (
+            <Float speed={5} floatIntensity={0.5}>
+              <mesh position={[x * 1.2, -0.5, 0]}>
+                <sphereGeometry args={[0.1, 8, 8]} />
+                <meshStandardMaterial 
+                  color={i === 0 ? '#a855f7' : '#ec4899'}
+                  emissive={i === 0 ? '#a855f7' : '#ec4899'}
+                  emissiveIntensity={1}
+                />
+              </mesh>
+            </Float>
+          )}
+        </group>
       ))}
       
-      {/* Glow ring */}
-      <mesh position={[0, 1.3, 0]}>
-        <torusGeometry args={[0.5, 0.05, 8, 32]} />
+      {/* Pulsing glow ring */}
+      <mesh ref={ringRef} position={[0, 1.35, 0]}>
+        <torusGeometry args={[0.55, 0.06, 12, 32]} />
         <meshStandardMaterial 
-          color="#22c55e"
-          emissive="#22c55e"
-          emissiveIntensity={isActive ? 1 : 0.3}
+          color={isActive ? '#4ade80' : '#22c55e'}
+          emissive={isActive ? '#4ade80' : '#22c55e'}
+          emissiveIntensity={isActive ? 1.2 : 0.4}
         />
       </mesh>
+
+      {/* Hover indicator */}
+      {hovered && !isActive && (
+        <mesh position={[0, 1.8, 0]}>
+          <sphereGeometry args={[0.15, 8, 8]} />
+          <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.8} />
+        </mesh>
+      )}
     </group>
   );
 }

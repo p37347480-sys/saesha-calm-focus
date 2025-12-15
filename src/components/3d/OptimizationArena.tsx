@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Html } from '@react-three/drei';
+import { Text, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { QuizPanel } from './QuizPanel';
 
@@ -37,55 +37,86 @@ function OptimizableBox({
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const edgeRef = useRef<THREE.Mesh>(null);
   const targetDims = useRef(dimensions);
   const currentDims = useRef({ ...dimensions });
 
   useFrame((state) => {
-    // Lerp current dimensions to target
-    currentDims.current.width = THREE.MathUtils.lerp(currentDims.current.width, dimensions.width, 0.1);
-    currentDims.current.height = THREE.MathUtils.lerp(currentDims.current.height, dimensions.height, 0.1);
-    currentDims.current.depth = THREE.MathUtils.lerp(currentDims.current.depth, dimensions.depth, 0.1);
+    const time = state.clock.elapsedTime;
+    // Smooth lerp current dimensions to target
+    currentDims.current.width = THREE.MathUtils.lerp(currentDims.current.width, dimensions.width, 0.08);
+    currentDims.current.height = THREE.MathUtils.lerp(currentDims.current.height, dimensions.height, 0.08);
+    currentDims.current.depth = THREE.MathUtils.lerp(currentDims.current.depth, dimensions.depth, 0.08);
 
     if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.3;
+      meshRef.current.rotation.y = time * 0.4;
       meshRef.current.scale.set(currentDims.current.width, currentDims.current.height, currentDims.current.depth);
     }
     if (glowRef.current) {
-      glowRef.current.rotation.y = state.clock.elapsedTime * 0.3;
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.03 + 1;
+      glowRef.current.rotation.y = time * 0.4;
+      const pulse = Math.sin(time * 3) * 0.05 + 1.15;
       glowRef.current.scale.set(
-        currentDims.current.width * 1.1 * pulse, 
-        currentDims.current.height * 1.1 * pulse, 
-        currentDims.current.depth * 1.1 * pulse
+        currentDims.current.width * pulse, 
+        currentDims.current.height * pulse, 
+        currentDims.current.depth * pulse
       );
+    }
+    if (edgeRef.current) {
+      edgeRef.current.rotation.y = time * 0.4;
+      edgeRef.current.scale.set(currentDims.current.width, currentDims.current.height, currentDims.current.depth);
     }
   });
 
-  // Color based on efficiency
+  // Color based on efficiency with gradient feel
   const getColor = () => {
     if (efficiency < 0.4) return '#ef4444';
     if (efficiency < 0.7) return '#f59e0b';
+    if (efficiency < 0.9) return '#84cc16';
     return '#22c55e';
   };
 
   return (
     <group>
+      {/* Outer glow */}
       <mesh ref={glowRef}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color={getColor()} transparent opacity={0.15} />
+        <meshBasicMaterial color={getColor()} transparent opacity={0.12} />
       </mesh>
+      {/* Main box with enhanced materials */}
       <mesh ref={meshRef}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial 
           color={getColor()} 
           transparent 
-          opacity={0.9}
-          metalness={0.4}
-          roughness={0.3}
+          opacity={0.92}
+          metalness={0.6}
+          roughness={0.2}
           emissive={getColor()}
-          emissiveIntensity={0.2}
+          emissiveIntensity={efficiency > 0.8 ? 0.4 : 0.2}
         />
       </mesh>
+      {/* Wireframe edge highlight */}
+      <mesh ref={edgeRef}>
+        <boxGeometry args={[1.02, 1.02, 1.02]} />
+        <meshBasicMaterial color={getColor()} wireframe transparent opacity={0.3} />
+      </mesh>
+      {/* Efficiency particles */}
+      {efficiency > 0.8 && (
+        <>
+          {[...Array(8)].map((_, i) => (
+            <Float key={i} speed={3 + i * 0.3} floatIntensity={0.5}>
+              <mesh position={[
+                Math.cos(i * Math.PI / 4) * 1.5,
+                Math.sin(i * Math.PI / 4) * 1.5,
+                0
+              ]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={1} />
+              </mesh>
+            </Float>
+          ))}
+        </>
+      )}
     </group>
   );
 }
@@ -108,64 +139,105 @@ function ControlSlider({
   color: string;
 }) {
   const [hovered, setHovered] = useState<'minus' | 'plus' | null>(null);
+  const minusBtnRef = useRef<THREE.Mesh>(null);
+  const plusBtnRef = useRef<THREE.Mesh>(null);
+  const knobRef = useRef<THREE.Mesh>(null);
   
   const normalized = (value - min) / (max - min);
 
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (minusBtnRef.current && hovered === 'minus') {
+      const pulse = Math.sin(time * 8) * 0.1 + 1;
+      minusBtnRef.current.scale.setScalar(pulse);
+    }
+    if (plusBtnRef.current && hovered === 'plus') {
+      const pulse = Math.sin(time * 8) * 0.1 + 1;
+      plusBtnRef.current.scale.setScalar(pulse);
+    }
+    if (knobRef.current) {
+      const glow = Math.sin(time * 4) * 0.02 + 1;
+      knobRef.current.scale.setScalar(glow);
+    }
+  });
+
   return (
     <group position={position}>
-      <Text position={[0, 0.5, 0]} fontSize={0.18} color="#ffffff" anchorX="center">
+      <Text position={[0, 0.5, 0]} fontSize={0.2} color="#ffffff" anchorX="center" fontWeight="bold">
         {label}: {value.toFixed(1)}
       </Text>
       
-      {/* Track */}
+      {/* Track background */}
       <mesh>
-        <boxGeometry args={[2.5, 0.1, 0.1]} />
-        <meshStandardMaterial color="#2a2a4a" />
+        <boxGeometry args={[2.5, 0.12, 0.12]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.5} roughness={0.5} />
       </mesh>
 
-      {/* Fill */}
-      <mesh position={[-(1.25 - normalized * 1.25), 0, 0.06]}>
-        <boxGeometry args={[normalized * 2.5, 0.08, 0.02]} />
-        <meshStandardMaterial color={color} />
+      {/* Active fill with glow */}
+      <mesh position={[-(1.25 - normalized * 1.25), 0, 0.08]}>
+        <boxGeometry args={[normalized * 2.5, 0.1, 0.03]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
       </mesh>
 
-      {/* Knob */}
-      <mesh position={[-1.25 + normalized * 2.5, 0, 0]}>
-        <sphereGeometry args={[0.12, 16, 16]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
-      </mesh>
+      {/* Animated Knob */}
+      <group position={[-1.25 + normalized * 2.5, 0, 0.1]}>
+        <mesh ref={knobRef}>
+          <sphereGeometry args={[0.15, 20, 20]} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} metalness={0.8} roughness={0.1} />
+        </mesh>
+        <mesh scale={1.3}>
+          <sphereGeometry args={[0.15, 12, 12]} />
+          <meshBasicMaterial color={color} transparent opacity={0.15} />
+        </mesh>
+      </group>
 
-      {/* Minus Button */}
-      <mesh 
-        position={[-1.8, 0, 0]}
-        onClick={(e) => { e.stopPropagation(); onChange(Math.max(min, value - 0.2)); }}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered('minus'); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(null); document.body.style.cursor = 'auto'; }}
-      >
-        <boxGeometry args={[0.3, 0.3, 0.1]} />
-        <meshStandardMaterial 
-          color={hovered === 'minus' ? '#a855f7' : '#ef4444'} 
-          emissive={hovered === 'minus' ? '#a855f7' : '#ef4444'}
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-      <Text position={[-1.8, 0, 0.1]} fontSize={0.2} color="#ffffff" anchorX="center" anchorY="middle">-</Text>
+      {/* Enhanced Minus Button */}
+      <group position={[-1.9, 0, 0]}>
+        {hovered === 'minus' && (
+          <mesh scale={1.5}>
+            <octahedronGeometry args={[0.22]} />
+            <meshBasicMaterial color="#ef4444" transparent opacity={0.2} />
+          </mesh>
+        )}
+        <mesh 
+          ref={minusBtnRef}
+          onClick={(e) => { e.stopPropagation(); onChange(Math.max(min, value - 0.2)); }}
+          onPointerOver={(e) => { e.stopPropagation(); setHovered('minus'); document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { setHovered(null); document.body.style.cursor = 'auto'; }}
+        >
+          <octahedronGeometry args={[0.2]} />
+          <meshStandardMaterial 
+            color={hovered === 'minus' ? '#f87171' : '#ef4444'} 
+            emissive="#ef4444"
+            emissiveIntensity={hovered === 'minus' ? 0.8 : 0.3}
+            metalness={0.7}
+          />
+        </mesh>
+      </group>
 
-      {/* Plus Button */}
-      <mesh 
-        position={[1.8, 0, 0]}
-        onClick={(e) => { e.stopPropagation(); onChange(Math.min(max, value + 0.2)); }}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered('plus'); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(null); document.body.style.cursor = 'auto'; }}
-      >
-        <boxGeometry args={[0.3, 0.3, 0.1]} />
-        <meshStandardMaterial 
-          color={hovered === 'plus' ? '#a855f7' : '#22c55e'} 
-          emissive={hovered === 'plus' ? '#a855f7' : '#22c55e'}
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-      <Text position={[1.8, 0, 0.1]} fontSize={0.2} color="#ffffff" anchorX="center" anchorY="middle">+</Text>
+      {/* Enhanced Plus Button */}
+      <group position={[1.9, 0, 0]}>
+        {hovered === 'plus' && (
+          <mesh scale={1.5}>
+            <octahedronGeometry args={[0.22]} />
+            <meshBasicMaterial color="#22c55e" transparent opacity={0.2} />
+          </mesh>
+        )}
+        <mesh 
+          ref={plusBtnRef}
+          onClick={(e) => { e.stopPropagation(); onChange(Math.min(max, value + 0.2)); }}
+          onPointerOver={(e) => { e.stopPropagation(); setHovered('plus'); document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { setHovered(null); document.body.style.cursor = 'auto'; }}
+        >
+          <octahedronGeometry args={[0.2]} />
+          <meshStandardMaterial 
+            color={hovered === 'plus' ? '#4ade80' : '#22c55e'} 
+            emissive="#22c55e"
+            emissiveIntensity={hovered === 'plus' ? 0.8 : 0.3}
+            metalness={0.7}
+          />
+        </mesh>
+      </group>
     </group>
   );
 }

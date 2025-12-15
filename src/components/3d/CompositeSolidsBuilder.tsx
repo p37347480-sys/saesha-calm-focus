@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text, Html } from '@react-three/drei';
+import { Text, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { QuizPanel } from './QuizPanel';
 
@@ -41,24 +41,28 @@ function DraggableLibraryShape({
   type, 
   position, 
   color,
-  onSelect
+  onSelect,
+  isActive
 }: { 
   type: ShapeType;
   position: [number, number, number];
   color: string;
   onSelect: (type: ShapeType) => void;
+  isActive?: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
-      if (hovered) {
-        meshRef.current.scale.setScalar(1.2);
-      } else {
-        meshRef.current.scale.setScalar(1);
-      }
+      meshRef.current.rotation.y = state.clock.elapsedTime * (hovered || isActive ? 1.5 : 0.5);
+      const targetScale = hovered ? 1.3 : isActive ? 1.2 : 1;
+      meshRef.current.scale.setScalar(THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1));
+    }
+    if (glowRef.current && (hovered || isActive)) {
+      const pulse = Math.sin(state.clock.elapsedTime * 5) * 0.1 + 1.4;
+      glowRef.current.scale.setScalar(pulse);
     }
   });
 
@@ -72,26 +76,43 @@ function DraggableLibraryShape({
   };
 
   return (
-    <group position={position}>
-      <mesh
-        ref={meshRef}
-        onClick={(e) => { e.stopPropagation(); onSelect(type); }}
-        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
-      >
-        {getGeometry()}
-        <meshStandardMaterial 
-          color={hovered ? '#fbbf24' : color} 
-          transparent 
-          opacity={0.9}
-          emissive={hovered ? '#fbbf24' : color}
-          emissiveIntensity={hovered ? 0.3 : 0.1}
-        />
-      </mesh>
-      <Text position={[0, -0.6, 0]} fontSize={0.12} color="#ffffff" anchorX="center">
-        {type}
-      </Text>
-    </group>
+    <Float speed={2} floatIntensity={hovered ? 0.4 : 0.2}>
+      <group position={position}>
+        {/* Glow effect */}
+        {(hovered || isActive) && (
+          <mesh ref={glowRef}>
+            {getGeometry()}
+            <meshBasicMaterial color={isActive ? '#4ade80' : '#fbbf24'} transparent opacity={0.15} />
+          </mesh>
+        )}
+        <mesh
+          ref={meshRef}
+          onClick={(e) => { e.stopPropagation(); onSelect(type); }}
+          onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+        >
+          {getGeometry()}
+          <meshStandardMaterial 
+            color={hovered ? '#fbbf24' : isActive ? '#4ade80' : color} 
+            transparent 
+            opacity={0.95}
+            metalness={0.7}
+            roughness={0.2}
+            emissive={hovered ? '#fbbf24' : isActive ? '#4ade80' : color}
+            emissiveIntensity={hovered ? 0.5 : isActive ? 0.4 : 0.15}
+          />
+        </mesh>
+        {isActive && (
+          <mesh scale={1.2}>
+            {getGeometry()}
+            <meshBasicMaterial color="#4ade80" wireframe transparent opacity={0.3} />
+          </mesh>
+        )}
+        <Text position={[0, -0.7, 0]} fontSize={0.14} color="#ffffff" anchorX="center" fontWeight="bold">
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </Text>
+      </group>
+    </Float>
   );
 }
 
@@ -108,11 +129,20 @@ function PlacedShapeComponent({
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
+  const [deleteHovered, setDeleteHovered] = useState(false);
 
   useFrame((state) => {
-    if (meshRef.current && isSelected) {
-      const pulse = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
-      meshRef.current.scale.setScalar(pulse);
+    if (meshRef.current) {
+      if (isSelected) {
+        const pulse = 1 + Math.sin(state.clock.elapsedTime * 5) * 0.08;
+        meshRef.current.scale.setScalar(pulse);
+        meshRef.current.rotation.y = state.clock.elapsedTime * 1.5;
+      } else if (hovered) {
+        meshRef.current.scale.setScalar(1.1);
+        meshRef.current.rotation.y = state.clock.elapsedTime * 0.5;
+      } else {
+        meshRef.current.scale.setScalar(THREE.MathUtils.lerp(meshRef.current.scale.x, 1, 0.1));
+      }
     }
   });
 
@@ -127,6 +157,13 @@ function PlacedShapeComponent({
 
   return (
     <group position={shape.position}>
+      {/* Glow for selected/hovered */}
+      {(isSelected || hovered) && (
+        <mesh scale={1.2}>
+          {getGeometry()}
+          <meshBasicMaterial color={isSelected ? '#fbbf24' : '#a855f7'} transparent opacity={0.12} />
+        </mesh>
+      )}
       <mesh
         ref={meshRef}
         onClick={(e) => { e.stopPropagation(); onSelect(); }}
@@ -135,30 +172,51 @@ function PlacedShapeComponent({
       >
         {getGeometry()}
         <meshStandardMaterial 
-          color={isSelected ? '#fbbf24' : hovered ? '#a855f7' : shape.color} 
+          color={isSelected ? '#fbbf24' : hovered ? '#c084fc' : shape.color} 
           transparent 
-          opacity={0.85}
+          opacity={0.9}
+          metalness={0.6}
+          roughness={0.2}
           emissive={isSelected ? '#fbbf24' : hovered ? '#a855f7' : shape.color}
-          emissiveIntensity={isSelected ? 0.4 : hovered ? 0.2 : 0.1}
+          emissiveIntensity={isSelected ? 0.5 : hovered ? 0.3 : 0.15}
         />
       </mesh>
       {isSelected && (
         <>
-          <mesh scale={1.15}>
+          <mesh scale={1.18}>
             {getGeometry()}
-            <meshBasicMaterial color="#fbbf24" transparent opacity={0.2} wireframe />
+            <meshBasicMaterial color="#fbbf24" transparent opacity={0.25} wireframe />
           </mesh>
-          {/* Delete button */}
-          <mesh 
-            position={[0, 0.8, 0]}
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
-            onPointerOut={() => { document.body.style.cursor = 'auto'; }}
-          >
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
+          {/* Enhanced delete button */}
+          <Float speed={4} floatIntensity={0.3}>
+            <group position={[0, 0.9, 0]}>
+              {deleteHovered && (
+                <mesh scale={1.5}>
+                  <sphereGeometry args={[0.15, 12, 12]} />
+                  <meshBasicMaterial color="#ef4444" transparent opacity={0.3} />
+                </mesh>
+              )}
+              <mesh 
+                onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                onPointerOver={(e) => { e.stopPropagation(); setDeleteHovered(true); document.body.style.cursor = 'pointer'; }}
+                onPointerOut={() => { setDeleteHovered(false); document.body.style.cursor = 'auto'; }}
+              >
+                <sphereGeometry args={[0.18, 16, 16]} />
+                <meshStandardMaterial 
+                  color={deleteHovered ? '#f87171' : '#ef4444'} 
+                  emissive="#ef4444" 
+                  emissiveIntensity={deleteHovered ? 0.8 : 0.5}
+                  metalness={0.7}
+                />
+              </mesh>
+              <Text position={[0, 0, 0.2]} fontSize={0.12} color="#ffffff" anchorX="center">✕</Text>
+            </group>
+          </Float>
+          {/* Selection ring */}
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+            <torusGeometry args={[0.5, 0.03, 8, 32]} />
+            <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.6} />
           </mesh>
-          <Text position={[0, 0.8, 0.2]} fontSize={0.1} color="#ffffff" anchorX="center">✕</Text>
         </>
       )}
     </group>

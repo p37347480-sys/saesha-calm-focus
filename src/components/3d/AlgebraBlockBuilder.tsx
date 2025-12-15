@@ -30,7 +30,7 @@ const algebraQuestions: Question[] = [
 
 // Using shared QuizPanel component from ./QuizPanel
 
-// Interactive algebra block
+// Interactive algebra block with enhanced animations
 function AlgebraBlock({ 
   type, 
   position, 
@@ -47,92 +47,161 @@ function AlgebraBlock({
   isSelected: boolean;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
   
   useFrame((state) => {
     if (meshRef.current) {
+      const time = state.clock.elapsedTime;
       if (isSelected) {
-        meshRef.current.rotation.y = state.clock.elapsedTime * 2;
-        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.1;
+        meshRef.current.rotation.y = time * 2;
+        meshRef.current.position.y = position[1] + Math.sin(time * 3) * 0.15;
+        meshRef.current.scale.setScalar(1 + Math.sin(time * 4) * 0.1);
+      } else if (hovered) {
+        meshRef.current.scale.setScalar(1.15);
+        meshRef.current.rotation.y = time * 0.5;
+      } else {
+        meshRef.current.scale.setScalar(1);
       }
+    }
+    if (glowRef.current && (isSelected || hovered)) {
+      const pulse = Math.sin(state.clock.elapsedTime * 5) * 0.15 + 1.3;
+      glowRef.current.scale.setScalar(pulse);
     }
   });
 
   return (
-    <Float speed={isSelected ? 3 : 1} floatIntensity={isSelected ? 0.4 : 0.15}>
-      <mesh ref={meshRef} position={position} onClick={onClick}>
-        <boxGeometry args={size} />
-        <meshStandardMaterial
-          color={color}
-          metalness={0.7}
-          roughness={0.2}
-          emissive={color}
-          emissiveIntensity={isSelected ? 0.6 : 0.3}
-        />
-      </mesh>
+    <Float speed={isSelected ? 3 : 1.5} floatIntensity={isSelected ? 0.5 : 0.2}>
+      <group position={position}>
+        {/* Glow effect */}
+        {(isSelected || hovered) && (
+          <mesh ref={glowRef}>
+            <boxGeometry args={[size[0] * 1.2, size[1] * 1.2, size[2] * 1.2]} />
+            <meshBasicMaterial color={color} transparent opacity={0.2} />
+          </mesh>
+        )}
+        <mesh 
+          ref={meshRef} 
+          onClick={onClick}
+          onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+        >
+          <boxGeometry args={size} />
+          <meshStandardMaterial
+            color={hovered ? '#fbbf24' : color}
+            metalness={0.8}
+            roughness={0.15}
+            emissive={isSelected ? '#fbbf24' : hovered ? '#fbbf24' : color}
+            emissiveIntensity={isSelected ? 0.8 : hovered ? 0.5 : 0.3}
+          />
+        </mesh>
+        {isSelected && (
+          <mesh scale={1.1}>
+            <boxGeometry args={size} />
+            <meshBasicMaterial color="#fbbf24" wireframe transparent opacity={0.6} />
+          </mesh>
+        )}
+      </group>
     </Float>
   );
 }
 
-// Expression builder showing (a+b)² expansion
+// Enhanced Expression builder showing (a+b)² expansion
 function ExpressionBuilder({ a, b }: { a: number; b: number }) {
-  const a2 = a * a;
-  const b2 = b * b;
-  const ab = a * b;
+  const groupRef = useRef<THREE.Group>(null);
+  const [animProgress, setAnimProgress] = useState(0);
+  
+  useFrame((state) => {
+    if (groupRef.current) {
+      // Subtle breathing animation
+      const breath = Math.sin(state.clock.elapsedTime * 0.8) * 0.02;
+      groupRef.current.scale.setScalar(1 + breath);
+    }
+    // Smooth animation progress
+    setAnimProgress(prev => Math.min(prev + 0.02, 1));
+  });
   
   return (
-    <group position={[0, 0, 0]}>
-      {/* a² square */}
-      <mesh position={[-a/2, 0, -a/2]}>
-        <boxGeometry args={[a, 0.15, a]} />
-        <meshStandardMaterial 
-          color="#8b5cf6"
-          emissive="#8b5cf6"
-          emissiveIntensity={0.4}
-          metalness={0.8}
-          roughness={0.15}
-        />
-      </mesh>
+    <group ref={groupRef} position={[0, 0, 0]}>
+      {/* a² square with animated glow */}
+      <Float speed={0.8} floatIntensity={0.05}>
+        <mesh position={[-a/2, 0, -a/2]}>
+          <boxGeometry args={[a * animProgress, 0.2, a * animProgress]} />
+          <meshStandardMaterial 
+            color="#8b5cf6"
+            emissive="#8b5cf6"
+            emissiveIntensity={0.5}
+            metalness={0.9}
+            roughness={0.1}
+          />
+        </mesh>
+        {/* Edge glow */}
+        <mesh position={[-a/2, 0.15, -a/2]}>
+          <boxGeometry args={[a * animProgress + 0.05, 0.02, a * animProgress + 0.05]} />
+          <meshBasicMaterial color="#c4b5fd" transparent opacity={0.6} />
+        </mesh>
+      </Float>
       
-      {/* b² square */}
-      <mesh position={[a/2 + b/2, 0, a/2 + b/2]}>
-        <boxGeometry args={[b, 0.15, b]} />
-        <meshStandardMaterial 
-          color="#06b6d4"
-          emissive="#06b6d4"
-          emissiveIntensity={0.4}
-          metalness={0.8}
-          roughness={0.15}
-        />
-      </mesh>
+      {/* b² square with animated glow */}
+      <Float speed={1} floatIntensity={0.05}>
+        <mesh position={[a/2 + b/2, 0, a/2 + b/2]}>
+          <boxGeometry args={[b * animProgress, 0.2, b * animProgress]} />
+          <meshStandardMaterial 
+            color="#06b6d4"
+            emissive="#06b6d4"
+            emissiveIntensity={0.5}
+            metalness={0.9}
+            roughness={0.1}
+          />
+        </mesh>
+        <mesh position={[a/2 + b/2, 0.15, a/2 + b/2]}>
+          <boxGeometry args={[b * animProgress + 0.05, 0.02, b * animProgress + 0.05]} />
+          <meshBasicMaterial color="#67e8f9" transparent opacity={0.6} />
+        </mesh>
+      </Float>
       
-      {/* First ab rectangle */}
-      <mesh position={[a/2 + b/2, 0, -a/2]}>
-        <boxGeometry args={[b, 0.12, a]} />
-        <meshStandardMaterial 
-          color="#c4b5fd"
-          emissive="#c4b5fd"
-          emissiveIntensity={0.35}
-          transparent
-          opacity={0.9}
-        />
-      </mesh>
+      {/* First ab rectangle with pulse */}
+      <Float speed={1.2} floatIntensity={0.08}>
+        <mesh position={[a/2 + b/2, 0, -a/2]}>
+          <boxGeometry args={[b * animProgress, 0.15, a * animProgress]} />
+          <meshStandardMaterial 
+            color="#c4b5fd"
+            emissive="#a78bfa"
+            emissiveIntensity={0.4}
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+      </Float>
       
-      {/* Second ab rectangle */}
-      <mesh position={[-a/2, 0, a/2 + b/2]}>
-        <boxGeometry args={[a, 0.12, b]} />
-        <meshStandardMaterial 
-          color="#c4b5fd"
-          emissive="#c4b5fd"
-          emissiveIntensity={0.35}
-          transparent
-          opacity={0.9}
-        />
-      </mesh>
+      {/* Second ab rectangle with pulse */}
+      <Float speed={1.2} floatIntensity={0.08}>
+        <mesh position={[-a/2, 0, a/2 + b/2]}>
+          <boxGeometry args={[a * animProgress, 0.15, b * animProgress]} />
+          <meshStandardMaterial 
+            color="#c4b5fd"
+            emissive="#a78bfa"
+            emissiveIntensity={0.4}
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+      </Float>
+
+      {/* Connection lines with energy effect */}
+      {animProgress > 0.5 && (
+        <>
+          <mesh position={[0, 0.3, 0]} rotation={[0, Math.PI / 4, 0]}>
+            <torusGeometry args={[(a + b) * 0.4, 0.02, 8, 32]} />
+            <meshStandardMaterial color="#e879f9" emissive="#e879f9" emissiveIntensity={0.8} transparent opacity={0.4} />
+          </mesh>
+        </>
+      )}
     </group>
   );
 }
 
-// Variable slider blocks
+// Enhanced interactive variable slider blocks
 function VariableBlock({ 
   variable, 
   value, 
@@ -148,32 +217,83 @@ function VariableBlock({
   onIncrease: () => void;
   onDecrease: () => void;
 }) {
+  const [hoveredBtn, setHoveredBtn] = useState<'plus' | 'minus' | null>(null);
+  const blockRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (blockRef.current) {
+      blockRef.current.scale.x = THREE.MathUtils.lerp(blockRef.current.scale.x, value * 0.5, 0.1);
+    }
+  });
+
   return (
     <group position={position}>
-      {/* Variable block */}
-      <mesh>
-        <boxGeometry args={[value * 0.5, 0.5, 0.5]} />
+      {/* Variable block with smooth scaling */}
+      <mesh ref={blockRef}>
+        <boxGeometry args={[1, 0.6, 0.6]} />
         <meshStandardMaterial 
           color={color}
           emissive={color}
-          emissiveIntensity={0.4}
+          emissiveIntensity={0.5}
+          metalness={0.7}
+          roughness={0.2}
         />
       </mesh>
       
-      {/* Increase button */}
-      <Float speed={2} floatIntensity={0.2}>
-        <mesh position={[value * 0.3 + 0.4, 0, 0]} onClick={onIncrease}>
-          <boxGeometry args={[0.3, 0.3, 0.3]} />
-          <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={0.5} />
-        </mesh>
+      {/* Glow ring around block */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.5, 0.03, 8, 32]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.5} />
+      </mesh>
+      
+      {/* Enhanced Increase button */}
+      <Float speed={3} floatIntensity={hoveredBtn === 'plus' ? 0.4 : 0.15}>
+        <group position={[value * 0.3 + 0.6, 0, 0]}>
+          <mesh 
+            onClick={(e) => { e.stopPropagation(); onIncrease(); }}
+            onPointerOver={(e) => { e.stopPropagation(); setHoveredBtn('plus'); document.body.style.cursor = 'pointer'; }}
+            onPointerOut={() => { setHoveredBtn(null); document.body.style.cursor = 'auto'; }}
+          >
+            <octahedronGeometry args={[0.25]} />
+            <meshStandardMaterial 
+              color={hoveredBtn === 'plus' ? '#4ade80' : '#22c55e'} 
+              emissive="#22c55e" 
+              emissiveIntensity={hoveredBtn === 'plus' ? 1 : 0.5}
+              metalness={0.8}
+            />
+          </mesh>
+          {hoveredBtn === 'plus' && (
+            <mesh scale={1.5}>
+              <octahedronGeometry args={[0.25]} />
+              <meshBasicMaterial color="#22c55e" transparent opacity={0.2} />
+            </mesh>
+          )}
+        </group>
       </Float>
       
-      {/* Decrease button */}
-      <Float speed={2} floatIntensity={0.2}>
-        <mesh position={[-value * 0.3 - 0.4, 0, 0]} onClick={onDecrease}>
-          <boxGeometry args={[0.3, 0.3, 0.3]} />
-          <meshStandardMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.5} />
-        </mesh>
+      {/* Enhanced Decrease button */}
+      <Float speed={3} floatIntensity={hoveredBtn === 'minus' ? 0.4 : 0.15}>
+        <group position={[-value * 0.3 - 0.6, 0, 0]}>
+          <mesh 
+            onClick={(e) => { e.stopPropagation(); onDecrease(); }}
+            onPointerOver={(e) => { e.stopPropagation(); setHoveredBtn('minus'); document.body.style.cursor = 'pointer'; }}
+            onPointerOut={() => { setHoveredBtn(null); document.body.style.cursor = 'auto'; }}
+          >
+            <octahedronGeometry args={[0.25]} />
+            <meshStandardMaterial 
+              color={hoveredBtn === 'minus' ? '#f87171' : '#ef4444'} 
+              emissive="#ef4444" 
+              emissiveIntensity={hoveredBtn === 'minus' ? 1 : 0.5}
+              metalness={0.8}
+            />
+          </mesh>
+          {hoveredBtn === 'minus' && (
+            <mesh scale={1.5}>
+              <octahedronGeometry args={[0.25]} />
+              <meshBasicMaterial color="#ef4444" transparent opacity={0.2} />
+            </mesh>
+          )}
+        </group>
       </Float>
     </group>
   );
