@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { QuizPanel } from './QuizPanel';
 
 interface Question {
   question: string;
@@ -26,36 +27,6 @@ const factorQuestions: Question[] = [
   { question: "x² - 16 factors to?", options: ["(x-4)²", "(x+4)(x-4)", "(x-8)(x+2)", "(x+16)(x-1)"], correctAnswer: 1 },
   { question: "What are the roots of x² - x - 6 = 0?", options: ["x = 2, -3", "x = -2, 3", "x = 3, -2", "x = 1, 6"], correctAnswer: 2 }
 ];
-
-function QuizPanel({ currentQuestion, onAnswer, score, totalQuestions }: { 
-  currentQuestion: Question | null;
-  onAnswer: (index: number) => void;
-  score: number;
-  totalQuestions: number;
-}) {
-  if (!currentQuestion) return null;
-
-  return (
-    <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-sm border border-border">
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-sm font-medium text-primary">🌲 Factoring Quiz</span>
-        <span className="text-sm text-muted-foreground">Score: {score}/{totalQuestions}</span>
-      </div>
-      <p className="text-foreground font-medium mb-3">{currentQuestion.question}</p>
-      <div className="space-y-2">
-        {currentQuestion.options.map((option, index) => (
-          <button
-            key={index}
-            onClick={() => onAnswer(index)}
-            className="w-full text-left p-2 rounded-lg bg-muted hover:bg-primary/20 transition-colors text-sm text-foreground"
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // Interactive factoring tree
 function FactorTree({ 
@@ -252,6 +223,23 @@ export function FactorForest() {
     setInteractionCount(prev => prev + 1);
   };
 
+  // Auto-trigger question every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!currentQuestion && usedQuestions.length < factorQuestions.length) {
+        const available = factorQuestions.filter((_, i) => !usedQuestions.includes(i));
+        if (available.length > 0) {
+          const randomIdx = Math.floor(Math.random() * available.length);
+          const originalIdx = factorQuestions.indexOf(available[randomIdx]);
+          setCurrentQuestion(available[randomIdx]);
+          setUsedQuestions(prev => [...prev, originalIdx]);
+        }
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [currentQuestion, usedQuestions]);
+
+  // Also trigger on interaction
   useEffect(() => {
     if (interactionCount > 0 && interactionCount % 2 === 0 && !currentQuestion) {
       const available = factorQuestions.filter((_, i) => !usedQuestions.includes(i));
@@ -264,8 +252,8 @@ export function FactorForest() {
     }
   }, [interactionCount]);
 
-  const handleAnswer = (selectedIndex: number) => {
-    if (currentQuestion && selectedIndex === currentQuestion.correctAnswer) {
+  const handleAnswer = (selectedIndex: number, isCorrect: boolean) => {
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
     setQuestionsAnswered(prev => prev + 1);
@@ -292,6 +280,8 @@ export function FactorForest() {
           onAnswer={handleAnswer}
           score={score}
           totalQuestions={questionsAnswered}
+          emoji="🌲"
+          title="Factoring Quiz"
         />
       </Html>
 
